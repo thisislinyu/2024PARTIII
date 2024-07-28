@@ -1,0 +1,2 @@
+load("/Users/yulin/DLSPH/COMPS/2024PARTIII/ref/cope_data_for_5_orig_lms.rds")
+load("/Users/yulin/Downloads/cope_data_for_5_orig_lms.rds")

@@ -1,0 +1,764 @@
+---
+title: "COPE Descriptive Analyses"
+author: "Michael Mullarkey and Mallory Dobias"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 5
+    toc_float:
+      collapsed: no
+      smooth_scroll: no
+geometry: margin=0.50in
+---
+
+```{r setup, include=FALSE, cache = FALSE}
+require("knitr")
+## setting working directory
+knitr::opts_chunk$set(echo = TRUE, tidy = TRUE, warning = FALSE, message = FALSE, include = FALSE)
+```
+
+```{r loading packages}
+
+if(!require(tidymodels)){install.packages('tidymodels')}
+library(tidymodels)
+if(!require(readr)){install.packages('readr')}
+library(readr)
+if(!require(broom.mixed)){install.packages('broom.mixed')}
+library(broom.mixed)
+if(!require(tidyverse)){install.packages('tidyverse')}
+library(tidyverse)
+if(!require(nycflights13)){install.packages('nycflights13')}
+library(nycflights13)
+if(!require(skimr)){install.packages('skimr')}
+library(skimr)
+if(!require(modeldata)){install.packages('modeldata')}
+library(modeldata)
+if(!require(ranger)){install.packages('ranger')}
+library(ranger)
+if(!require(vip)){install.packages('vip')}
+library(vip)
+if(!require(gt)){install.packages('gt')}
+library(gt)
+if(!require(ggthemes)){install.packages('ggthemes')}
+library(ggthemes)
+if(!require(xgboost)){install.packages('xgboost')}
+library(xgboost)
+if(!require(keras)){install.packages('keras')}
+library(keras)
+if(!require(furrr)){install.packages('furrr')}
+library(furrr)
+if(!require(kernlab)){install.packages('kernlab')}
+library(kernlab)
+if(!require(mlbench)){install.packages('mlbench')}
+library(mlbench)
+if(!require(scales)){install.packages('scales')}
+library(scales)
+# if(!require(tidyposterior)){install.packages('tidyposterior')}
+# library(tidyposterior)
+# if(!require(rstanarm)){install.packages('rstanarm')}
+# library(rstanarm)
+if(!require(tictoc)){install.packages('tictoc')}
+library(tictoc)
+# library(devtools)
+# devtools::install_github("abresler/nbastatR")
+# library(nbastatR)
+if(!require(heatmaply)){install.packages('heatmaply')}
+library(heatmaply)
+if(!require(ggmosaic)){install.packages('ggmosaic')}
+library(ggmosaic)
+if(!require(splines)){install.packages('splines')}
+library(splines)
+if(!require(doMC)){install.packages('doMC')}
+library(doMC)
+if(!require(glue)){install.packages('glue')}
+library(glue)
+if(!require(stacks)){install.packages('stacks')}
+library(stacks)
+if(!require(janitor)){install.packages('janitor')}
+library(janitor)
+if(!require(future)){install.packages('future')}
+library(future)
+if(!require(reticulate)){install.packages('reticulate')}
+library(reticulate)
+if(!require(furrr)){install.packages('furrr')}
+library(furrr)
+if(!require(tuber)){install.packages('tuber')}
+library(tuber)
+if(!require(tidytext)){install.packages('tidytext')}
+library(tidytext)
+if(!require(topicmodels)){install.packages('topicmodels')}
+library(topicmodels)
+if(!require(wordcloud)){install.packages('wordcloud')}
+library(wordcloud)
+if(!require(reshape2)){install.packages('reshape2')}
+library(reshape2)
+if(!require(youtubecaption)){install.packages('youtubecaption')}
+library(youtubecaption)
+if(!require(textrecipes)){install.packages('textrecipes')}
+library(textrecipes)
+if(!require(stopwords)){install.packages('stopwords')}
+library(stopwords)
+if(!require(hardhat)){install.packages('hardhat')}
+library(hardhat)
+if(!require(poissonreg)){install.packages('poissonreg')}
+library(poissonreg)
+if(!require(remotes)){install.packages('remotes')}
+library(remotes)
+# remotes::install_github('jorvlan/raincloudplots')
+# library(raincloudplots)
+if(!require(DescTools)){install.packages('DescTools')}
+library(DescTools)
+if(!require(readxl)){install.packages('readxl')}
+library(readxl)
+if(!require(modeest)){install.packages('modeest')}
+library(modeest)
+if(!require(psych)){install.packages('psych')}
+library(psych)
+# install_local("DTVEM_1.0010.tar.gz") # http://www.nicholasjacobson.com/project/dtvem/
+# library(DTVEM)
+# Loading DTVEM dependencies
+if(!require(mgcv)){install.packages('mgcv')}
+library(mgcv)
+if(!require(zoo)){install.packages('zoo')}
+library(zoo)
+if(!require(OpenMx)){install.packages('OpenMx')}
+library(OpenMx)
+if(!require(imputeTS)){install.packages('imputeTS')}
+library(imputeTS)
+if(!require(tfdatasets)){install.packages('tfdatasets')}
+library(tfdatasets)
+if(!require(rlang)){install.packages('rlang')}
+library(rlang)
+if(!require(RANN)){install.packages('RANN')}
+library(RANN)
+if(!require(baguette)){install.packages('baguette')}
+library(baguette)
+if(!require(rules)){install.packages('rules')}
+library(rules)
+if(!require(timetk)){install.packages('timetk')}
+library(timetk)
+if(!require(tidyquant)){install.packages('tidyquant')}
+library(tidyquant)
+if(!require(tsibble)){install.packages('tsibble')}
+library(tsibble)
+if(!require(feasts)){install.packages('feasts')}
+library(feasts)
+if(!require(dtw)){install.packages('dtw')}
+library(dtw)
+if(!require(parallelDist)){install.packages('parallelDist')}
+library(parallelDist)
+if(!require(pheatmap)){install.packages('pheatmap')}
+library(pheatmap)
+if(!require(diffdf)){install.packages('diffdf')}
+library(diffdf)
+if(!require(tableone)){install.packages('tableone')}
+library(tableone)
+if(!require(tableone)){install.packages('tableone')}
+library(tableone)
+if(!require(corrr)){install.packages('corrr')}
+library(corrr)
+if(!require(Amelia)){install.packages('Amelia')}
+library(Amelia)
+if(!require(MOTE)){install.packages('MOTE')}
+library(MOTE)
+if(!require(fuzzyjoin)){install.packages('fuzzyjoin')}
+library(fuzzyjoin)
+if(!require(car)){install.packages('car')}
+library(car)
+if(!require(lsmeans)){install.packages('lsmeans')}
+library(lsmeans)
+if(!require(fastDummies)){install.packages('fastDummies')}
+library(fastDummies)
+if(!require(gt)){install.packages('gt')}
+library(gt)
+if(!require(gtsummary)){install.packages('gtsummary')}
+library(gtsummary)
+if(!require(flextable)){install.packages('flextable')}
+library(flextable)
+if(!require(officer)){install.packages('officer')}
+library(officer)
+if(!require(emmeans)){install.packages('emmeans')}
+library(emmeans)
+if(!require(zipcodeR)){install.packages('zipcodeR')}
+library(zipcodeR)
+if(!require(tmap)){install.packages('tmap')}
+library(tmap)
+if(!require(tigris)){install.packages('tigris')}
+library(tigris)
+if(!require(sf)){install.packages('sf')}
+library(sf)
+if(!require(cartography)){install.packages('cartography')}
+library(cartography)
+
+## Let's set our number of cores for this document (May differ across computers)
+
+registerDoMC(cores = 7)
+
+```
+
+```{r doing some initial descriptive statistics and filtering, include = TRUE}
+
+## Creating cleaned data
+
+cope_full_data <- read_rds("cleaned_cope_data_randomized.rds")
+
+## Here's how many folks were randomized
+
+cope_full_data %>% 
+  tally()
+
+## Let's retain only folks who are randomized for these analyses (Should not drop anyone, and it doesn't)
+
+cope_full_data_randomized <- cope_full_data %>% 
+  filter(!is.na(condition))
+
+## How long is each conditon taking?
+
+cope_full_data_randomized %>% 
+  group_by(condition) %>% 
+  summarise(mean_survey_length_seconds = mean(b_duration_in_seconds, na.rm = T)) %>% 
+  mutate(mean_survey_length_minutes = mean_survey_length_seconds/60)
+
+## These look like artifacts of surveys being left open for a really long time and then completed, let's check
+
+cope_full_data_randomized %>% 
+  ggplot(aes(x = b_duration_in_seconds)) +
+  geom_histogram(alpha = 0.6)
+
+## Yep, seems to be driven by outliers, so let's look at the median time the people who finished the survey for a more realistic time check
+
+cope_full_data_randomized %>% 
+  group_by(condition) %>% 
+  summarise(median_survey_length_seconds = median(b_duration_in_seconds, na.rm = T)) %>% 
+  mutate(median_survey_length_minutes = median_survey_length_seconds/60)
+
+## It's only marginally longer for folks who finished the ntire baseline survey, so not driven much lower by non-completers who were randomized
+
+cope_full_data_randomized %>% 
+  filter(b_finished == 1) %>% 
+  group_by(condition) %>% 
+  summarise(median_survey_length_seconds = median(b_duration_in_seconds, na.rm = T)) %>% 
+  mutate(median_survey_length_minutes = median_survey_length_seconds/60)
+
+## We also want completion time for folks across all conditions
+
+cope_full_data_randomized %>% 
+  summarise(mean_survey_length_seconds = mean(b_duration_in_seconds, na.rm = T)) %>% 
+  mutate(mean_survey_length_minutes = mean_survey_length_seconds/60)
+
+cope_full_data_randomized %>% 
+  summarise(median_survey_length_seconds = median(b_duration_in_seconds, na.rm = T)) %>% 
+  mutate(median_survey_length_minutes = median_survey_length_seconds/60)
+
+```
+```{r getting the demographic info we need for nih report}
+
+## Need to first identify the folks who identify as more than one race, get their metrics, then pull them out of the subsequent calculations
+
+multi_racial_id <- cope_full_data_randomized %>% 
+  dplyr::select(b_response_id, contains("b_dem_race")) %>%
+  dplyr::select(-c(b_dem_race, b_dem_race_7_text)) %>% 
+  rowwise() %>% 
+  mutate(num_race_identities = sum(c_across(c(b_dem_race_american_indian_or_alaska_native:b_dem_race_asian_including_asian_desi,
+                                              b_dem_race_native_hawaiian_or_other_pacific_islander:b_dem_race_na)), na.rm = T)) %>% 
+  dplyr::select(b_response_id, num_race_identities) %>% 
+  filter(num_race_identities >= 2) %>% 
+  ungroup() %>% 
+  print()
+
+## Looking within folks who identify as more than one race (in this case not counting identifying as Hispanic/Latinx and another race as identifying as more than one race)
+
+multi_race_breakdown <- cope_full_data_randomized %>% 
+  filter(b_response_id %in% multi_racial_id$b_response_id) %>% 
+  dplyr::select(b_response_id, b_dem_sex, contains("b_dem_race")) %>%
+  dplyr::select(-c(b_dem_race, b_dem_race_7_text)) %>% 
+  group_by(b_dem_race_hispanic_latinx, b_dem_sex) %>% ## Getting counts across each category for people who identify as more than one race
+  tally() %>% 
+  mutate(b_dem_race_hispanic_latinx = case_when(
+    
+    b_dem_race_hispanic_latinx == 0 ~ "No",
+    b_dem_race_hispanic_latinx == 1 ~ "Yes"
+    
+  ),
+  total = cumsum(n)) %>% 
+  rename(Hispanic = b_dem_race_hispanic_latinx, `Biological Sex` = b_dem_sex, `Participants Identifying As More Than One Race` = n) %>% 
+  print()
+
+## Now looking at everyone else (in this case not counting identifying as Hipanic/Latinx and another race as identifying as more than one race)
+
+one_racial_identity_breakdown <- cope_full_data_randomized %>% 
+  anti_join(multi_racial_id, by = "b_response_id") %>% 
+  dplyr::select(b_response_id, b_dem_sex, contains("b_dem_race")) %>%
+  dplyr::select(-c(b_dem_race, b_dem_race_7_text)) %>% 
+  group_by(b_dem_race_hispanic_latinx, b_dem_sex) %>% 
+  summarise(across(where(is.numeric),~ sum((.x)))) %>% ## Getting counts across each category for people who identify as more than one race
+  mutate(b_dem_race_hispanic_latinx = case_when(
+    
+    b_dem_race_hispanic_latinx == 0 ~ "No",
+    b_dem_race_hispanic_latinx == 1 ~ "Yes"
+    
+  ),
+  total_per_row = rowSums(dplyr::select(cur_data(), where(is.numeric)), na.rm = T),
+  total = cumsum(total_per_row)) %>% 
+  rename(Hispanic = b_dem_race_hispanic_latinx, `Biological Sex` = b_dem_sex, `American Indian/Alaska Native` = b_dem_race_american_indian_or_alaska_native,
+         Asian = b_dem_race_asian_including_asian_desi, `Native Hawaiian or other Pacific Islander` = b_dem_race_native_hawaiian_or_other_pacific_islander,
+         `White` = b_dem_race_white_caucasian_non_hispanic_includes_middle_eastern, `Black or African American` = b_dem_race_black_african_american,
+         Other = b_dem_race_other_specify, `Prefer Not to Answer` = b_dem_race_prefer_not_to_answer) %>% 
+  dplyr::select(-b_dem_race_na) %>% 
+  print()
+
+## Now looking at folks who only identify as Hispanic/Latinx
+
+one_racial_id_latinx <- cope_full_data_randomized %>% 
+  dplyr::select(b_response_id, b_dem_sex, contains("b_dem_race")) %>%
+  dplyr::select(-c(b_dem_race, b_dem_race_7_text)) %>% 
+  rowwise() %>% 
+  mutate(num_race_identities = sum(c_across(where(is.numeric)), na.rm = T)) %>% 
+  dplyr::select(b_dem_sex, b_dem_race_hispanic_latinx, num_race_identities) %>% 
+  filter(b_dem_race_hispanic_latinx == 1 & num_race_identities == 1) %>% 
+  group_by(b_dem_sex) %>%
+  tally() %>% 
+  rename(`Biological Sex` = b_dem_sex, `Participants Identifying as Only Hispanic/Latinx` = n) %>% 
+  print()
+
+## Writing these to csvs to send via e-mail to the team
+
+# Taking out the totals columns for clarity
+
+multi_race_breakdown_table <- multi_race_breakdown %>% 
+  dplyr::select(-total)
+
+one_racial_identity_breakdown_table <- one_racial_identity_breakdown %>% 
+  dplyr::select(-contains("total"))
+
+write_csv(multi_race_breakdown_table, "multirace_demo_breakdown_table.csv")
+
+write_csv(one_racial_identity_breakdown_table, "one_racial_identity_demo_breakdown_table.csv")
+
+write_csv(one_racial_id_latinx, "one_racial_identity_latinx_demo_breakdown_table.csv")
+
+## Double checking that everyone who identified as Hispanic/Latinx selected at least two racial identities
+
+multi_racial_id_latinx <- cope_full_data_randomized %>% 
+  dplyr::select(b_response_id, b_dem_sex, contains("b_dem_race")) %>%
+  dplyr::select(-c(b_dem_race, b_dem_race_7_text)) %>% 
+  rowwise() %>% 
+  mutate(num_race_identities = sum(c_across(where(is.numeric)), na.rm = T)) %>% 
+  dplyr::select(b_dem_sex, b_dem_race_hispanic_latinx, num_race_identities) %>% 
+  filter(b_dem_race_hispanic_latinx == 1 & num_race_identities >= 2) %>% 
+  group_by(b_dem_sex) %>%
+  tally() %>% 
+  rename(`Biological Sex` = b_dem_sex, `Participants Identifying as Hispanic/Latinx and At Least One Other Racial Identity` = n) %>% 
+  print()
+
+```
+```{r figuring out where everyone is from}
+
+reverse_zipcode(cope_full_data_randomized$b_dem_zip_code) %>% 
+  group_by(state) %>% 
+  tally()
+
+```
+
+```{r creating an interactive map for where participants are from}
+
+zip_count <- cope_full_data_randomized %>% 
+  group_by(b_dem_zip_code) %>% 
+  tally()
+
+#2. Download a shapefile (shp,gpkg,geojson...)
+library(tigris) #For downloading the zipcode map
+options(tigris_use_cache = TRUE)
+geo_zip <- st_as_sf(zctas(cb = TRUE))
+
+#Overall shape of USA states
+states <- st_as_sf(states(cb=TRUE))
+#For plotting, all the maps should have the same crs
+states <- st_transform(states,st_crs(geo_zip))
+
+#3. Now Merge your data
+data_zip <- left_join(geo_zip,zip_count, by = c("ZCTA5CE10" = "b_dem_zip_code"))
+
+# Plot
+
+tmap_mode("view")
+
+cope_map <- tm_shape(data_zip) +
+    tm_symbols(col = "red", size = "n", scale = .01)
+
+cope_map
+
+tmap_save(tm = cope_map)
+
+```
+
+
+```{r now creating a descriptives and demographics table for the whole randomized sample, include = TRUE}
+
+
+## We need to grab the right columns for Table 1
+
+vars_for_table1 <- cope_full_data_randomized %>% 
+  dplyr::select(condition, contains("b_dem_race"), contains("b_dem_gender"), b_dem_sex, b_dem_orientation, b_cdi_mean) %>%
+  dplyr::select(-contains("text"),-b_dem_race,-b_dem_gender,-ends_with("na")) %>% # Might want to verify that these have NAs in them/we're accounting for missing data
+  mutate(condition = factor(case_when(
+    
+    condition == "0" ~ "Placebo Control",
+    condition == "1" ~ "Project Personality",
+    condition == "2" ~ "Project ABC",
+    TRUE ~ NA_character_
+    
+  )),
+  b_cdi_sum = b_cdi_mean * 12) %>%
+  dplyr::select(-b_cdi_mean) %>% 
+  print()
+
+## Now using gtsummary to create table 1, then converting to flextable for output/minor edits in Word
+
+table1 <- tbl_summary(vars_for_table1, by = condition, statistic = list(all_continuous() ~ "{mean} ({sd})",
+                     all_categorical() ~ "{n} ({p}%)"), digits = all_continuous() ~ 2,
+                     label = list(b_dem_race_american_indian_or_alaska_native ~ "American Indian or Alaska Native",
+                                  b_dem_race_asian_including_asian_desi ~ "Asian Including Asian Desi",
+                                  b_dem_race_hispanic_latinx ~ "Hispanic/Latinx",
+                                  b_dem_race_native_hawaiian_or_other_pacific_islander ~ "Native Hawaiian or Other Pacific Islander",
+                                  b_dem_race_white_caucasian_non_hispanic_includes_middle_eastern ~ "White",
+                                  b_dem_race_black_african_american ~"Black/African-American",
+                                  b_dem_race_other_specify ~ "Other",
+                                  b_dem_race_prefer_not_to_answer ~ "Prefer Not to Answer",
+                                  b_dem_gender_agender ~ "Agender",
+                                  b_dem_gender_not_sure ~ "Not sure/Questioning",
+                                  b_dem_gender_other_please_specify ~ "Unspecified Gender",
+                                  b_dem_gender_androgynous ~ "Androgynous",
+                                  b_dem_gender_nonbinary ~ "Non-binary",
+                                  b_dem_gender_two_spirited ~ "Two-spirited",
+                                  b_dem_gender_female_to_male_transgender_ftm ~ "Transgender - Female to Male",
+                                  b_dem_gender_trans_female_trans_feminine ~ "Trans Female/Trans Feminine",
+                                  b_dem_gender_trans_male_trans_masculine ~ "Trans Male/Trans Masculine",
+                                  b_dem_gender_gender_expansive ~ "Gender Expansive",
+                                  b_dem_gender_third_gender ~ "Third Gender",
+                                  b_dem_gender_genderqueer ~ "Genderqueer",
+                                  b_dem_gender_male_to_female_transgender_mtf ~ "Transgender - Male to Female",
+                                  b_dem_gender_man_boy ~ "Man/Boy",
+                                  b_dem_gender_transgender ~ "Transgender",
+                                  b_dem_gender_woman_girl ~ "Woman/Girl",
+                                  b_dem_sex ~ "Biological Sex",
+                                  b_dem_orientation ~ "Sexual Orientation",
+                                  b_cdi_sum ~ "Baseline CDI Sum Score (0-24)")) %>% 
+          modify_header(label ~ "**Demographics**") %>%
+          modify_spanning_header(c("stat_1", "stat_2","stat_3") ~ "**Treatment Received**")
+
+table1
+
+## Convert to flextable so we can output to Word
+
+table1_word <- table1 %>% 
+  as_flex_table()
+
+## Creating table one in a Word Doc format
+
+read_docx() %>% 
+  body_add_flextable(value = table1_word) %>% 
+  print(target = "cope_table_1_word.docx")
+
+
+```
+
+
+```{r visualizing the numeric variables we collected, include = TRUE}
+
+## Getting numeric variables' composite names
+
+names_num_composites <- cope_full_data_randomized %>% 
+  dplyr::select(contains("mean")) %>% 
+  names() %>% 
+  print()
+
+map(names_num_composites, ~{
+  
+  cope_full_data_randomized %>% 
+  ggplot(aes(x = .data[[.x]])) +
+  geom_density(alpha = 0.2)
+  
+})
+
+```
+
+```{r visualizing smallest effect size of interest questions, include = TRUE}
+
+## Getting sesoi variables' composite names
+
+names_sesoi <- cope_full_data_randomized %>%
+  dplyr::select(where(is.numeric)) %>% 
+  dplyr::select(contains("change"),-contains("tim"),-contains("time")) %>% 
+  names() %>% 
+  print()
+
+## Looking at SESOI questions in relation to baseline depression
+
+map(names_sesoi, ~{
+  
+  cope_full_data_randomized %>% 
+  ggplot(aes(x = .data[[.x]], y = b_cdi_mean)) +
+  geom_point(alpha = 0.2) +
+  labs(y = "Depression Sum Score at Baseline")
+  
+})
+
+```
+
+```{r breaking down smallest effect size of interest by condition, include = TRUE}
+
+## Looking at the smallest effect size of interest questions across conditions, higher numbers are better
+
+cope_full_data_randomized %>% 
+  filter(!is.na(pi_change_problems)) %>% 
+  group_by(condition, pi_change_problems) %>% 
+  tally() %>%
+  mutate(percentage = 100*(n/sum(n)))  %>%
+  mutate(condition = case_when(
+    condition == "0" ~ "Placebo Control",
+    condition == "1" ~ "Project Personality",
+    condition == "2" ~ "Project ABC"
+  ))
+
+cope_full_data_randomized %>% 
+  filter(!is.na(pi_change_hopeless)) %>% 
+  group_by(condition, pi_change_hopeless) %>% 
+  tally() %>%
+  mutate(percentage = 100*(n/sum(n)))  %>%
+  mutate(condition = case_when(
+    condition == "0" ~ "Placebo Control",
+    condition == "1" ~ "Project Personality",
+    condition == "2" ~ "Project ABC"
+  ))
+
+```
+
+## Looking at Differences in PFS Items Across Conditions
+
+```{r breaking down pfs items}
+
+## Testing if PFS item scores differ by condition
+
+# Do it once
+
+# Firs tlet's name the condition variable and convert to factor
+
+cope_full_data_randomized_nc <- cope_full_data_randomized %>%
+  mutate(condition = factor(case_when(
+    condition == "0" ~ "Placebo Control",
+    condition == "1" ~ "Project Personality",
+    condition == "2" ~ "Project ABC"
+  )))
+  
+# Now create an example of comparing the PFS means by condition (This is the "do it once" part)
+
+pfs_1_lm <- lm(b_pfs_1 ~ condition, data = cope_full_data_randomized_nc) # Fit a linear mdoel
+contrast_mean <- emmeans::emmeans(pfs_1_lm,"condition",data=cope_full_data_randomized_nc) # Use emmeans to get the estimated marginal means of the outcome across each condition (which we can use to get pairwise contrasts across conditions from the linear model in the next step)
+
+contrast(contrast_mean, "pairwise", adjust = "none") %>% # Getting all possible contrasts based on condition, tidying them into a dataframe
+  tidy() %>% 
+  mutate(item = "b_pfs_1") %>% 
+  relocate(item, everything())
+
+## Practicing to see if I can make the original linear model that we estimate (this isn't a "new" step) based on the name of the item to make the function easier to use
+
+item_name <- cope_full_data_randomized_nc %>% 
+    dplyr::select(b_pfs_1) %>% 
+    names()
+
+variables <- "condition"
+
+## Writing a linear model formula, which makes it easier to write functions where the name changes rather than hard coding the name each time
+
+f_ex <- as.formula(f <- as.formula(
+  paste(item_name, 
+        paste(variables, collapse = " + "), 
+        sep = " ~ ")))
+f_ex
+
+# Create tidy function
+
+get_pfs_by_cond <- function(.data, item_var){
+
+item_name <- .data %>% 
+    dplyr::select({{item_var}}) %>% 
+    names()
+
+variables <- "condition"
+
+f <- as.formula(f <- as.formula(
+  paste(item_name, 
+        paste(variables, collapse = " + "), 
+        sep = " ~ "))) # Uses item name from function to create a linear model formula we can use within the function
+
+pfs_lm <- lm(formula = f, data = .data)
+contrast_mean <- emmeans::emmeans(pfs_lm,"condition",data=.data)
+contrast(contrast_mean, "pairwise", adjust = "none") %>% 
+  tidy() %>% 
+  mutate(item = item_var) %>% 
+  relocate(item, everything())
+  
+}
+
+# Test tidy function once
+
+cope_full_data_randomized_nc %>% 
+  get_pfs_by_cond(item_var = "b_pfs_1")
+
+# Now map over all PFS items
+
+pfs_items <- cope_full_data_randomized_nc %>% 
+  dplyr::select(matches("pfs_\\d")) %>% # Selecting all variables that have "pfs_ANY_DIGIT"
+  names() %>% # Creating names vector rather than selecting the variables themselves
+  print()
+
+all_pfs_comparisons <- map_dfr(pfs_items, ~{
+  
+  cope_full_data_randomized_nc %>% 
+    get_pfs_by_cond(.x)
+  
+}) %>% 
+  print()
+
+## Correcting for multiple testing with fdr
+
+corrected_p_values_pfs <- all_pfs_comparisons %>% 
+  mutate(p_adj = p.adjust(p.value, method = "fdr"),
+         item = case_when(
+           
+           str_detect(item,"1") ~ "enjoyed",
+           str_detect(item,"2") ~ "understood",
+           str_detect(item,"3") ~ "easy to use",
+           str_detect(item,"4") ~ "tried my hardest",
+           str_detect(item,"5") ~ "helpful to other kids",
+           str_detect(item,"6") ~ "would recommend to friend",
+           str_detect(item,"7") ~ "agree with message",
+           TRUE ~ NA_character_
+           
+         )) %>% # renaming items to make it easier to figure out which is which
+  relocate(item, contrast, estimate, p_adj, everything()) %>% 
+  print()
+
+## Folks enjoyed Project ABC significantly more than the placebo AND Project Personality
+## They said they understood the Placebo more than Project ABC (no other differences)
+## No differences on easy to use
+## No differences on tried my hardest
+## No differences on helpful to other kids
+## ABC more likely to recommend to a friend compared to Project Personality and Placebo (no other differences)
+## No differences on agree with message
+
+
+```
+## Creating a Table with PFS Means Broken Down by Condition
+
+```{r}
+
+vars_for_table_pfs <- cope_full_data_randomized %>% 
+  dplyr::select(condition, matches("pfs_\\d")) %>% 
+  mutate(condition = factor(case_when(
+    
+    condition == "0" ~ "Placebo Control",
+    condition == "1" ~ "Project Personality",
+    condition == "2" ~ "Project ABC",
+    TRUE ~ NA_character_
+    
+  )
+  )) %>% 
+  rename(Enjoyed = b_pfs_1, Understood = b_pfs_2, `Easy to Use` = b_pfs_3, `Tried My Hardest` = b_pfs_4,
+         `Helpful to Other Kids` = b_pfs_5, `Would Recommend to a Friend` = b_pfs_6, `Agree with Message` = b_pfs_7) %>% 
+  na.omit() %>% 
+  print()
+
+## Now using gtsummary to create table 1, then converting to flextable for output/minor edits in Word
+
+table_pfs <- tbl_summary(vars_for_table_pfs, by = condition, type = list(Enjoyed ~ "continuous", Understood ~ "continuous",
+                                                                                `Easy to Use` ~ "continuous", `Tried My Hardest` ~ "continuous",
+                                                                                `Helpful to Other Kids` ~ "continuous", `Would Recommend to a Friend` ~ "continuous",
+                                                                                `Agree with Message` ~ "continuous"), statistic = list(all_continuous() ~ "{mean} ({sd})",
+                     all_categorical() ~ "{n}"), digits = all_continuous() ~ 2) %>% 
+          modify_header(label ~ "**Program Feedback Scale Items**") %>%
+          modify_spanning_header(c("stat_1", "stat_2","stat_3") ~ "**Treatment Received**")
+
+table_pfs
+
+## Convert to flextable so we can output to Word
+
+table_pfs_word <- table_pfs %>% 
+  as_flex_table()
+
+## Creating table one in a Word Doc format
+
+read_docx() %>% 
+  body_add_flextable(value = table_pfs_word) %>% 
+  print(target = "cope_table_pfs_word.docx")
+
+```
+
+
+```{r creating correlation matrix between composite variables at baseline, include = TRUE}
+
+cor_matrix_baseline_composites <- cope_full_data_randomized %>% 
+  dplyr::select(contains("mean"), -contains("phq2"), -contains("pfs"), -starts_with("f1_"), -starts_with("pi_")) %>% 
+  correlate(diagonal = 1) %>% # Using the corrr package to create a baseline correlation matrix pretty easily (Could probably convert to a flextable if needed)
+  shave() %>% 
+  fashion() %>% 
+  print()
+
+```
+## Internal Consistency of Measures
+
+```{r calculating internal consistencies, include = TRUE}
+
+# Do it once
+
+cope_full_data_randomized %>%
+  select(contains("b_cdi"),-contains("mean"),-contains("tim")) %>%
+  psych::alpha(title = "b_cdi")
+
+# Write a function
+
+get_alpha <- function(.data, contains_text){
+  
+  .data %>%
+  select(contains(contains_text),-contains("mean"),-contains("tim")) %>%
+  psych::alpha(title = contains_text)
+  
+}
+
+cope_full_data_randomized %>% 
+  get_alpha(contains_text = "b_cdi")
+
+## Mapping over all needed internal consistencies for paper
+
+contains_text_for_map <- c("b_cdi","f1_cdi","b_gad","f1_gad","b_cts_rs","f1_cts_rs","b_shs","pi_shs","f1_shs","b_bhs","pi_bhs","f1_bhs","b_iptq","pi_iptq","b_bads","f1_bads")
+
+all_alphas <- map(contains_text_for_map, ~{
+  
+      cope_full_data_randomized %>% 
+        get_alpha(.x)
+  
+}) %>% 
+  print()
+
+```
+## Proportion of Sample Meeting Clinical Cutoffs
+
+```{r}
+
+cope_full_data_randomized %>% 
+  mutate(b_cdi_sum = b_cdi_mean * 12,
+         b_cdi_cut_off = factor(case_when(
+    
+    b_cdi_sum >= 10 ~ "Above Cut Off",
+    b_cdi_sum < 10 ~ "Below Cut Off",
+    TRUE ~ NA_character_
+    
+  ))) %>% # Creating sum score, then creating meeting the cut-off or not variable
+  group_by(b_cdi_cut_off) %>% 
+  tally() %>% 
+  mutate(percent = (n/nrow(cope_full_data_randomized))*100) # Calculating the number of folks who do and don't meet cut-off and also calculating percentage
+
+```
+

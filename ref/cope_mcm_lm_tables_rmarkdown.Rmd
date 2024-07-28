@@ -1,0 +1,1267 @@
+---
+title: "COPE LM Tables"
+author: "Michael Mullarkey and Mallory Dobias"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 5
+    toc_float:
+      collapsed: no
+      smooth_scroll: no
+geometry: margin=0.50in
+---
+
+```{r setup, include=FALSE, cache = FALSE}
+require("knitr")
+## setting working directory
+knitr::opts_chunk$set(echo = TRUE, tidy = TRUE, warning = FALSE, message = FALSE, include = FALSE)
+```
+
+```{r loading packages, include = FALSE}
+
+if(!require(tidymodels)){install.packages('tidymodels')}
+library(tidymodels)
+if(!require(readr)){install.packages('readr')}
+library(readr)
+if(!require(broom.mixed)){install.packages('broom.mixed')}
+library(broom.mixed)
+if(!require(tidyverse)){install.packages('tidyverse')}
+library(tidyverse)
+if(!require(nycflights13)){install.packages('nycflights13')}
+library(nycflights13)
+if(!require(skimr)){install.packages('skimr')}
+library(skimr)
+if(!require(modeldata)){install.packages('modeldata')}
+library(modeldata)
+if(!require(ranger)){install.packages('ranger')}
+library(ranger)
+if(!require(vip)){install.packages('vip')}
+library(vip)
+if(!require(gt)){install.packages('gt')}
+library(gt)
+if(!require(ggthemes)){install.packages('ggthemes')}
+library(ggthemes)
+if(!require(xgboost)){install.packages('xgboost')}
+library(xgboost)
+if(!require(keras)){install.packages('keras')}
+library(keras)
+if(!require(furrr)){install.packages('furrr')}
+library(furrr)
+if(!require(kernlab)){install.packages('kernlab')}
+library(kernlab)
+if(!require(mlbench)){install.packages('mlbench')}
+library(mlbench)
+if(!require(scales)){install.packages('scales')}
+library(scales)
+# if(!require(tidyposterior)){install.packages('tidyposterior')}
+# library(tidyposterior)
+# if(!require(rstanarm)){install.packages('rstanarm')}
+# library(rstanarm)
+if(!require(tictoc)){install.packages('tictoc')}
+library(tictoc)
+# library(devtools)
+# devtools::install_github("abresler/nbastatR")
+# library(nbastatR)
+if(!require(heatmaply)){install.packages('heatmaply')}
+library(heatmaply)
+if(!require(ggmosaic)){install.packages('ggmosaic')}
+library(ggmosaic)
+if(!require(splines)){install.packages('splines')}
+library(splines)
+if(!require(doMC)){install.packages('doMC')}
+library(doMC)
+if(!require(glue)){install.packages('glue')}
+library(glue)
+if(!require(stacks)){install.packages('stacks')}
+library(stacks)
+if(!require(janitor)){install.packages('janitor')}
+library(janitor)
+if(!require(future)){install.packages('future')}
+library(future)
+if(!require(reticulate)){install.packages('reticulate')}
+library(reticulate)
+if(!require(furrr)){install.packages('furrr')}
+library(furrr)
+if(!require(tuber)){install.packages('tuber')}
+library(tuber)
+if(!require(tidytext)){install.packages('tidytext')}
+library(tidytext)
+if(!require(topicmodels)){install.packages('topicmodels')}
+library(topicmodels)
+if(!require(wordcloud)){install.packages('wordcloud')}
+library(wordcloud)
+if(!require(reshape2)){install.packages('reshape2')}
+library(reshape2)
+if(!require(youtubecaption)){install.packages('youtubecaption')}
+library(youtubecaption)
+if(!require(textrecipes)){install.packages('textrecipes')}
+library(textrecipes)
+if(!require(stopwords)){install.packages('stopwords')}
+library(stopwords)
+if(!require(hardhat)){install.packages('hardhat')}
+library(hardhat)
+if(!require(poissonreg)){install.packages('poissonreg')}
+library(poissonreg)
+if(!require(remotes)){install.packages('remotes')}
+library(remotes)
+# remotes::install_github('jorvlan/raincloudplots')
+# library(raincloudplots)
+if(!require(DescTools)){install.packages('DescTools')}
+library(DescTools)
+if(!require(readxl)){install.packages('readxl')}
+library(readxl)
+if(!require(modeest)){install.packages('modeest')}
+library(modeest)
+if(!require(psych)){install.packages('psych')}
+library(psych)
+# install_local("DTVEM_1.0010.tar.gz") # http://www.nicholasjacobson.com/project/dtvem/
+# library(DTVEM)
+# Loading DTVEM dependencies
+if(!require(mgcv)){install.packages('mgcv')}
+library(mgcv)
+if(!require(zoo)){install.packages('zoo')}
+library(zoo)
+if(!require(OpenMx)){install.packages('OpenMx')}
+library(OpenMx)
+if(!require(imputeTS)){install.packages('imputeTS')}
+library(imputeTS)
+if(!require(tfdatasets)){install.packages('tfdatasets')}
+library(tfdatasets)
+if(!require(rlang)){install.packages('rlang')}
+library(rlang)
+if(!require(RANN)){install.packages('RANN')}
+library(RANN)
+if(!require(baguette)){install.packages('baguette')}
+library(baguette)
+if(!require(rules)){install.packages('rules')}
+library(rules)
+if(!require(timetk)){install.packages('timetk')}
+library(timetk)
+if(!require(tidyquant)){install.packages('tidyquant')}
+library(tidyquant)
+if(!require(tsibble)){install.packages('tsibble')}
+library(tsibble)
+if(!require(feasts)){install.packages('feasts')}
+library(feasts)
+if(!require(dtw)){install.packages('dtw')}
+library(dtw)
+if(!require(parallelDist)){install.packages('parallelDist')}
+library(parallelDist)
+if(!require(pheatmap)){install.packages('pheatmap')}
+library(pheatmap)
+if(!require(diffdf)){install.packages('diffdf')}
+library(diffdf)
+if(!require(tableone)){install.packages('tableone')}
+library(tableone)
+if(!require(tableone)){install.packages('tableone')}
+library(tableone)
+if(!require(corrr)){install.packages('corrr')}
+library(corrr)
+if(!require(Amelia)){install.packages('Amelia')}
+library(Amelia)
+if(!require(MOTE)){install.packages('MOTE')}
+library(MOTE)
+if(!require(fuzzyjoin)){install.packages('fuzzyjoin')}
+library(fuzzyjoin)
+if(!require(car)){install.packages('car')}
+library(car)
+if(!require(lsmeans)){install.packages('lsmeans')}
+library(lsmeans)
+if(!require(fastDummies)){install.packages('fastDummies')}
+library(fastDummies)
+if(!require(lmtest)){install.packages('lmtest')}
+library(lmtest)
+if(!require(sandwich)){install.packages('sandwich')}
+library(sandwich)
+# remotes::install_github('jorvlan/raincloudplots')
+# library(raincloudplots)
+if(!require(patchwork)){install.packages('patchwork')}
+library(patchwork)
+if(!require(gtsummary)){install.packages('gtsummary')}
+library(gtsummary)
+if(!require(flextable)){install.packages('flextable')}
+library(flextable)
+if(!require(pwr)){install.packages('pwr')}
+library(pwr)
+if(!require(TOSTER)){install.packages('TOSTER')}
+library(TOSTER)
+
+## Let's set our number of cores for this document (May differ across computers)
+
+registerDoMC(cores = 7)
+
+```
+
+## Reading in the Data Generated in Main Analyses Document
+
+```{r reading in the data, include = TRUE}
+
+## Reading in data for 5 original models that I need to convert into lm tables
+
+cope_nested_data <- read_rds("cope_data_for_5_orig_lms.rds")
+
+## Reading in data for 3 month bhs and shs analyses/tables
+
+cope_long_data <- read_rds("cope_data_for_bhs_shs_3_months.rds")
+
+
+```
+
+## Creating Tables with Original 5 Models
+
+```{r putting together info necessary for entire regression tables from mi meld}
+
+## Creating a dataframe of unnested lms
+
+# Needed to hack a way to creating the repeat structure necessary for imputations
+
+imp_nums <- expand_grid(one_set_of_imps = c(1:41),c(1:4))
+
+## Unnesting the linear models so we can have all the info we need for the mi.meld
+
+unnested_lms <- cope_nested_data %>% 
+  unnest(tidied_lms) %>% 
+  ungroup() %>% 
+  dplyr::select(measure, term:p.value) %>% 
+  mutate(imp = rep(imp_nums$one_set_of_imps,5),
+  measure_imp = str_c(measure, as.character(imp))) %>% 
+  print()
+
+# Creating a dataframe with only the rows we need to add to the unnested lms
+
+pp_vs_abc <- cope_nested_data %>% 
+  unnest(tidied_contrasts) %>% 
+  filter(str_detect(contrast, "Project ABC - Project Personality")) %>% 
+  ungroup() %>% 
+  dplyr::select(measure, term = contrast, estimate:p.value) %>% 
+  mutate(imp = rep(c(1:41), 5),
+         measure_imp = str_c(measure, as.character(imp))) %>% 
+  dplyr::select(-df) %>% 
+  print()
+
+## Now have created a dataframe that has all the information necessary (and displayed in a way that makes sense) to mi.meld for all predictors
+
+complete_lms <- unnested_lms %>% 
+  group_split(measure_imp) %>% 
+  map(~rows_insert(.x, pp_vs_abc, by = c("measure", "imp","estimate"))) %>% 
+  map_dfr(~{
+    
+    measure_imp_wanted <- .x %>% 
+      slice_head() %>% 
+      dplyr::select(measure_imp) %>% 
+      deframe()
+    
+    final_grouping <- .x %>% 
+      filter(str_detect(measure_imp, measure_imp_wanted))
+    
+  }) %>% 
+  group_by(measure_imp) %>%
+  distinct(term, .keep_all = TRUE) %>%
+  arrange(term) %>%
+  ungroup() %>%
+  arrange(measure, imp) %>% 
+  print()
+
+## Let's do a spot check to double check the correct pairwise contrasts show up with the correct linear model, and they do!
+
+unnested_lms %>% 
+  filter(str_detect(measure_imp, "bhs13"))
+
+pp_vs_abc %>% 
+  filter(str_detect(measure_imp, "bhs13"))
+
+complete_lms %>% 
+  filter(str_detect(measure_imp, "bhs13"))
+
+complete_lms %>% 
+  group_by(term) %>% 
+  tally()
+
+```
+
+
+```{r mi melding all components of each regression}
+
+## Aggregating regressions across imputations by measure
+
+# Do it once
+
+agg_ex <- complete_lms %>% 
+  filter(str_detect(measure, "bhs") & str_detect(term, "Intercept"))
+
+# Applying Rubin's rule across estimates and standard errors
+  
+mi_avg_agg_ex <- mi.meld(as.matrix(agg_ex$estimate),  as.matrix(agg_ex$std.error), byrow = T) #coefficient and standard error
+
+# Calculating the t value by taking the esimate divided by the standard error
+
+mi_avg_t_value_agg_ex <- mi_avg_agg_ex$q.mi[1,1] / mi_avg_agg_ex$se.mi[1,1]
+
+# Calculating p value from t value NEED TO DO: Come back and recalculate p values based on effect size, not sure if df are correct
+
+p <- 2*pt(-abs(mi_avg_t_value_agg_ex),df=2448)
+
+# Putting all of this into a tibble
+
+agg_ex_df <- tibble(measure = "bhs", estimate = mi_avg_agg_ex$q.mi[1,1], std_error = mi_avg_agg_ex$se.mi[1,1],
+                    t = mi_avg_t_value_agg_ex, p_value = p, df = 2448) %>% 
+  print()
+
+# Write a tidy function
+
+agg_lm_mi <- function(.data, measure_var, term_var, df_var){
+  
+  
+agg <- .data %>% 
+  filter(str_detect(measure, measure_var) & str_detect(term, term_var))
+
+# Applying Rubin's rule across estimates and standard errors
+  
+mi_avg_agg <- mi.meld(as.matrix(agg$estimate),  as.matrix(agg$std.error), byrow = T) #coefficient and standard error
+
+# Calculating the t value by taking the esimate divided by the standard error
+
+mi_avg_t_value_agg <- mi_avg_agg$q.mi[1,1] / mi_avg_agg$se.mi[1,1]
+
+# Calculating p value from t value
+
+p <- 2*pt(-abs(mi_avg_t_value_agg),df={{df_var}})
+
+# Putting all of this into a tibble
+
+agg__df <- tibble(measure = measure_var, term = term_var, estimate = mi_avg_agg$q.mi[1,1], std_error = mi_avg_agg$se.mi[1,1],
+                    t = mi_avg_t_value_agg, p_value = p, df = {{df_var}})
+  
+}
+
+complete_lms %>% 
+  agg_lm_mi(measure_var = "bhs", term_var = "Intercept", df_var = 2448) %>% 
+  print()
+
+## Now map over all combinations of measures and terms
+
+measures <- complete_lms %>% 
+  distinct(measure) %>% 
+  deframe()
+
+terms <- complete_lms %>% 
+  distinct(term) %>% 
+  deframe()
+
+all_meas_terms <- expand_grid(measures, terms) %>% 
+  mutate(df = rep(c(2448, 1637, 1629, 2448, 1632),5))
+
+agg_lms <- pmap_dfr(list(all_meas_terms$measures, all_meas_terms$terms, all_meas_terms$df), ~{
+  
+  complete_lms %>% 
+  agg_lm_mi(measure_var = ..1, term_var = ..2, df_var = ..3)
+  
+}) %>% 
+  print()
+
+```
+
+
+```{r creating regression tables programmatically with flextable}
+
+# Do it once
+
+agg_lms %>% 
+  filter(str_detect(measure, "bhs")) %>% 
+  dplyr::select(-measure, -df) %>% 
+  mutate(term = case_when(
+    
+    str_detect(term, "Intercept") == T ~ "Intercept",
+    str_detect(term, "predProject ABC") == T ~ "Placebo - Project ABC",
+    str_detect(term, "predProject Personality") == T ~ "Placebo - Project Personality",
+    str_detect(term, "baseline") == T ~ "Baseline Value of Outcome Variable",
+    TRUE ~ term
+    
+    
+  ),
+  p_value = case_when(
+    
+    p_value <= .001 ~ "< .001",
+    TRUE ~ as.character(round(p_value, 2))
+    
+  ),
+  across(c(estimate, std_error, t), ~format(round(.x, 2), nsmall = 2))) %>% 
+  rename(Predictor = term, Estimate = estimate, `Standard Error` = std_error, `p value` = p_value) %>% 
+  flextable() %>% 
+  add_header_lines(str_c(toupper("bhs")," Immediate Post Intervention")) %>%
+  autofit() %>% 
+  print()
+
+# Write a tidy function
+
+create_lm_table <- function(.data, measure_var, timing_text){
+  
+  lm_table <- agg_lms %>% 
+  filter(str_detect(measure, measure_var)) %>% 
+  dplyr::select(-measure, -df) %>% 
+  mutate(term = case_when(
+    
+    str_detect(term, "Intercept") == T ~ "Intercept",
+    str_detect(term, "predProject ABC") == T ~ "Placebo - Project ABC",
+    str_detect(term, "predProject Personality") == T ~ "Placebo - Project Personality",
+    str_detect(term, "baseline") == T ~ "Baseline Value of Outcome Variable",
+    TRUE ~ term
+    
+    
+  ),
+  p_value = case_when(
+    
+    p_value <= .001 ~ "< .001",
+    p_value <= .01 & p_value > .001 ~ "< .01",
+    TRUE ~ as.character(round(p_value, 2))
+    
+  ),
+  across(c(estimate, std_error, t), ~format(round(.x, 2), nsmall = 2))) %>% 
+  rename(Predictor = term, Estimate = estimate, `Standard Error` = std_error, `p value` = p_value) %>% 
+  flextable() %>% 
+  add_header_lines(str_c(toupper(measure_var),timing_text)) %>%
+  autofit()
+  
+}
+
+agg_lms %>% 
+  create_lm_table(measure_var = "bhs", timing_text = " Immediate Post Intervention") %>% 
+  print()
+
+# Map over all measures
+
+timings <- c(" Immediate Post Intervention", rep(" 3 Month Follow Up", 3), " Immediate Post Intervention")
+
+lm_tables <- map2(measures, timings, ~{
+  
+  agg_lms %>% 
+  create_lm_table(measure_var = .x, timing_text = .y)
+  
+}) %>% 
+  print()
+
+# Saving tables
+
+tf <- tempfile(fileext = ".docx")
+
+# Saving files (Programmatically didn't work since they don't play nice with glue, which is too bad)
+
+save_as_docx(`bhs pi`= lm_tables[[1]], path = "cope_lm_table_bhs_pi_word.docx")
+save_as_docx(`cdi 3 months`= lm_tables[[2]], path = "cope_lm_table_cdi_3_months_word.docx")
+save_as_docx(`cts 3 months`= lm_tables[[3]], path = "cope_lm_table_cts_3_months_word.docx")
+save_as_docx(`gad 3 months`= lm_tables[[4]], path = "cope_lm_table_gad_3_months_word.docx")
+save_as_docx(`shs pi`= lm_tables[[5]], path = "cope_lm_table_shs_pi_word.docx")
+
+```
+
+## Now Recreating the Process I Used for Original Models for 3 Month Hopelessness and 3 Month SHS Outcomes
+
+```{r creating a long form data frame that has shs and bhs with 3 month follow up outcomes}
+## I think we need to make this long data frame even longer
+
+# Want to put together all outcomes, condition values, and baseline values while also creating a name column based on which model we're looking at 
+
+cope_long_data_baseline <- cope_long_data %>% 
+  dplyr::select(imp, b_response_id, c(b_bhs_mean, b_shs_mean)) %>% 
+  pivot_longer(
+    cols = is.numeric,
+    names_to = "measure",
+    values_to = "baseline" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+  mutate(measure = case_when(
+    
+    str_detect(measure, "bhs") == T ~ "bhs",
+    str_detect(measure, "shs") == T ~ "shs"
+    
+  )) %>%
+  print()
+
+cope_long_data_condition <- cope_long_data %>% 
+  dplyr::select(imp, b_response_id, condition) %>% 
+  pivot_longer(
+    cols = condition,
+    names_to = "measure",
+    values_to = "pred" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+  print()
+
+cope_long_data_condition_extra <- cope_long_data_condition
+
+## Have to resize the condition datafrmae since it only contains one variable, while the other dataframes contain five. Also need to add the correct format of measure vars
+
+cope_long_data_condition_resized <- cope_long_data_condition %>% 
+  bind_rows(cope_long_data_condition_extra) %>% 
+  arrange(imp, b_response_id) %>%
+  mutate(measure = c(rep(c("bhs","shs"),100532))) %>% 
+  print()
+
+## NEED TO DO: Write a test here to double check that condition is combining correctly (Maybe do this in the next chunk as well/instead?)
+
+cope_long_data_outcome <- cope_long_data %>% 
+  dplyr::select(imp, b_response_id, c(f1_bhs_mean, f1_shs_mean)) %>% 
+  pivot_longer(
+    cols = is.numeric,
+    names_to = "measure",
+    values_to = "out" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+    mutate(measure = case_when(
+    
+    str_detect(measure, "bhs") == T ~ "bhs",
+    str_detect(measure, "shs") == T ~ "shs"
+    
+  )) %>%
+  print()
+
+```
+
+```{r nesting by measure first seems to work}
+
+cope_long_data_unnested <- cope_long_data_baseline %>% 
+  left_join(cope_long_data_condition_resized, by = c("imp", "b_response_id", "measure")) %>% 
+  left_join(cope_long_data_outcome, by = c("imp", "b_response_id", "measure"))  %>%
+  dplyr::select(-b_response_id) %>% 
+  relocate(imp, measure, pred, baseline, out)
+
+## Nesting by measure
+
+test_nest_by_measure_first <- cope_long_data_unnested %>% 
+  group_by(measure) %>%
+  nest()
+
+## Then splitting by imputation and applying the function
+
+# Create the function for this rmarkdown
+
+input_fun<-function(.data, outcome, predictor, covariate){
+  
+  lm_dat <- .data
+  
+  lm(as.formula(paste(outcome,"~",predictor,"+",paste(covariate,collapse = "+"))),data=lm_dat)
+}
+
+# Do it once
+
+cope_long_data_unnested %>% 
+  dplyr::select(-measure) %>% 
+  group_split(imp) %>% 
+  purrr::map(~input_fun(.data = .x, outcome="out",predictor="pred",covariate=c("baseline")))
+  
+## Now do it by funciton
+
+splitting_by_imp <- test_nest_by_measure_first %>% 
+  mutate(split_by_imp = purrr::map(data,~{
+    
+    new_data <- .x %>% 
+      group_split(imp) %>% 
+      purrr::map(~input_fun(.data = .x, outcome="out",predictor="pred",covariate=c("baseline")))
+      
+  }))
+
+## Unnest so we have access to all the models across all imputations for all outcomes
+
+lms_across_all_outcomes_and_imps <- splitting_by_imp %>% 
+  unnest(split_by_imp) %>% 
+  rename(lm_obj = split_by_imp)
+
+```
+
+```{r creating pairwise contrasts for all models bhs and shs 3 month}
+
+## Creating pairwise comparisons for all models https://stackoverflow.com/questions/65347058/emmeans-for-a-gls-model-doesnt-run-inside-map and https://cran.r-project.org/web/packages/emmeans/vignettes/comparisons.html
+
+all_pairwise_contrasts <- lms_across_all_outcomes_and_imps %>% 
+  mutate(contrast_means = map2(data, lm_obj, ~emmeans::emmeans(.y,"pred",data=.x)),
+         pairwise_contrasts = map(contrast_means, contrast, "pairwise", adjust = "none"), # Will be adjusting the p-values later (Want to go across all models)
+         tidied_contrasts = map(pairwise_contrasts, tidy),
+         tidied_lms = map(lm_obj, tidy))
+
+```
+
+
+```{r putting together info necessary for entire regression tables from mi meld bhs and shs 3 month}
+
+## Creating a dataframe of unnested lms
+
+# Needed to hack a way to creating the repeat structure necessary for imputations
+
+imp_nums <- expand_grid(one_set_of_imps = c(1:41),c(1:4))
+
+## Unnesting the linear models so we can have all the info we need for the mi.meld
+
+unnested_lms <- all_pairwise_contrasts %>% 
+  unnest(tidied_lms) %>% 
+  ungroup() %>% 
+  dplyr::select(measure, term:p.value) %>% 
+  mutate(imp = rep(imp_nums$one_set_of_imps,2),
+  measure_imp = str_c(measure, as.character(imp))) %>% 
+  print()
+
+# Creating a dataframe with only the rows we need to add to the unnested lms
+
+pp_vs_abc <- all_pairwise_contrasts %>% 
+  unnest(tidied_contrasts) %>% 
+  filter(str_detect(contrast, "Project ABC - Project Personality")) %>% 
+  ungroup() %>% 
+  dplyr::select(measure, term = contrast, estimate:p.value) %>% 
+  mutate(imp = rep(c(1:41), 2),
+         measure_imp = str_c(measure, as.character(imp))) %>% 
+  dplyr::select(-df) %>% 
+  print()
+
+## Now have created a dataframe that has all the information necessary (and displayed in a way that makes sense) to mi.meld for all predictors
+
+complete_lms <- unnested_lms %>% 
+  group_split(measure_imp) %>% 
+  map(~rows_insert(.x, pp_vs_abc, by = c("measure", "imp","estimate"))) %>% 
+  map_dfr(~{
+    
+    measure_imp_wanted <- .x %>% 
+      slice_head() %>% 
+      dplyr::select(measure_imp) %>% 
+      deframe()
+    
+    final_grouping <- .x %>% 
+      filter(str_detect(measure_imp, measure_imp_wanted))
+    
+  }) %>% 
+  arrange(measure, imp) %>% 
+  print()
+
+```
+
+
+```{r mi melding all components of each regression bhs and shs 3 month}
+
+## Aggregating regressions across imputations by measure
+
+# Do it once
+
+agg_ex <- complete_lms %>% 
+  filter(str_detect(measure, "bhs") & str_detect(term, "Intercept"))
+
+# Applying Rubin's rule across estimates and standard errors
+  
+mi_avg_agg_ex <- mi.meld(as.matrix(agg_ex$estimate),  as.matrix(agg_ex$std.error), byrow = T) #coefficient and standard error
+
+# Calculating the t value by taking the esimate divided by the standard error
+
+mi_avg_t_value_agg_ex <- mi_avg_agg_ex$q.mi[1,1] / mi_avg_agg_ex$se.mi[1,1]
+
+# Calculating p value from t value NEED TO DO: Come back and recalculate p values based on effect size, not sure if df are correct
+
+p <- 2*pt(-abs(mi_avg_t_value_agg_ex),df=2448)
+
+# Putting all of this into a tibble
+
+agg_ex_df <- tibble(measure = "bhs", estimate = mi_avg_agg_ex$q.mi[1,1], std_error = mi_avg_agg_ex$se.mi[1,1],
+                    t = mi_avg_t_value_agg_ex, p_value = p, df = 2448) %>% 
+  print()
+
+# Write a tidy function
+
+agg_lm_mi <- function(.data, measure_var, term_var, df_var){
+  
+  
+agg <- .data %>% 
+  filter(str_detect(measure, measure_var) & str_detect(term, term_var))
+
+# Applying Rubin's rule across estimates and standard errors
+  
+mi_avg_agg <- mi.meld(as.matrix(agg$estimate),  as.matrix(agg$std.error), byrow = T) #coefficient and standard error
+
+# Calculating the t value by taking the esimate divided by the standard error
+
+mi_avg_t_value_agg <- mi_avg_agg$q.mi[1,1] / mi_avg_agg$se.mi[1,1]
+
+# Calculating p value from t value
+
+p <- 2*pt(-abs(mi_avg_t_value_agg),df={{df_var}})
+
+# Putting all of this into a tibble
+
+agg__df <- tibble(measure = measure_var, term = term_var, estimate = mi_avg_agg$q.mi[1,1], std_error = mi_avg_agg$se.mi[1,1],
+                    t = mi_avg_t_value_agg, p_value = p, df = {{df_var}})
+  
+}
+
+complete_lms %>% 
+  agg_lm_mi(measure_var = "bhs", term_var = "Intercept", df_var = 2448) %>% 
+  print()
+
+## Now map over all combinations of measures and terms
+
+measures <- complete_lms %>% 
+  distinct(measure) %>% 
+  deframe()
+
+terms <- complete_lms %>% 
+  distinct(term) %>% 
+  deframe()
+
+all_meas_terms <- expand_grid(measures, terms) %>% 
+  mutate(df = rep(c(2448, 1637, 1629, 2448, 1632),2))
+
+agg_lms <- pmap_dfr(list(all_meas_terms$measures, all_meas_terms$terms, all_meas_terms$df), ~{
+  
+  complete_lms %>% 
+  agg_lm_mi(measure_var = ..1, term_var = ..2, df_var = ..3)
+  
+}) %>% 
+  print()
+
+```
+
+
+```{r creating regression tables programmatically with flextable bhs and shs 3 month}
+
+## Write the data frame so I can use it in the main analyses document
+
+write_rds(agg_lms, "agg_t_values_bhs_shs_3_months.rds")
+
+# Do it once
+
+agg_lms %>% 
+  filter(str_detect(measure, "bhs")) %>% 
+  dplyr::select(-measure, -df) %>% 
+  mutate(term = case_when(
+    
+    str_detect(term, "Intercept") == T ~ "Intercept",
+    str_detect(term, "predProject ABC") == T ~ "Placebo - Project ABC",
+    str_detect(term, "predProject Personality") == T ~ "Placebo - Project Personality",
+    str_detect(term, "baseline") == T ~ "Baseline Value of Outcome Variable",
+    TRUE ~ term
+    
+    
+  ),
+  p_value = case_when(
+    
+    p_value <= .001 ~ "< .001",
+    p_value <= .01 & p_value > .001 ~ "< .01",
+    TRUE ~ as.character(round(p_value, 2))
+    
+  ),
+  across(c(estimate, std_error, t), ~format(round(.x, 2), nsmall = 2))) %>% 
+  rename(Predictor = term, Estimate = estimate, `Standard Error` = std_error, `p value` = p_value) %>% 
+  flextable() %>% 
+  add_header_lines(str_c(toupper("bhs")," 3 Month Follow Up")) %>%
+  autofit() %>% 
+  print()
+
+# Write a tidy function
+
+create_lm_table <- function(.data, measure_var, timing_text){
+  
+  lm_table <- agg_lms %>% 
+  filter(str_detect(measure, measure_var)) %>% 
+  dplyr::select(-measure, -df) %>% 
+  mutate(term = case_when(
+    
+    str_detect(term, "Intercept") == T ~ "Intercept",
+    str_detect(term, "predProject ABC") == T ~ "Placebo - Project ABC",
+    str_detect(term, "predProject Personality") == T ~ "Placebo - Project Personality",
+    str_detect(term, "baseline") == T ~ "Baseline Value of Outcome Variable",
+    TRUE ~ term
+    
+    
+  ),
+  p_value = case_when(
+    
+    p_value <= .001 ~ "< .001",
+    p_value <= .01 & p_value > .001 ~ "< .01",
+    TRUE ~ as.character(round(p_value, 2))
+    
+  ),
+  across(c(estimate, std_error, t), ~format(round(.x, 2), nsmall = 2))) %>% 
+  rename(Predictor = term, Estimate = estimate, `Standard Error` = std_error, `p value` = p_value) %>% 
+  flextable() %>% 
+  add_header_lines(str_c(toupper(measure_var),timing_text)) %>%
+  autofit()
+  
+}
+
+agg_lms %>% 
+  create_lm_table(measure_var = "bhs", timing_text = " 3 Month Follow Up") %>% 
+  print()
+
+# Map over all measures
+
+timings <- c(rep(" 3 Month Follow Up", 2))
+
+lm_tables_3_month <- map2(c("bhs","shs"), timings, ~{
+  
+  agg_lms %>% 
+  create_lm_table(measure_var = .x, timing_text = .y)
+  
+}) %>% 
+  print()
+
+# Saving tables
+
+# Saving files (Programmatically didn't work since they don't play nice with glue, which is too bad)
+
+save_as_docx(`bhs 3 months`= lm_tables_3_month[[1]], path = "cope_lm_table_bhs_3_months_word.docx")
+save_as_docx(`shs 3 months`= lm_tables_3_month[[2]], path = "cope_lm_table_shs_3_months_word.docx")
+
+```
+
+## Now Recreating the Process I Used for Original Models for Reviewer Requested Outcomes
+
+```{r creating a long form data frame that has reviewer requested outcomes}
+## I think we need to make this long data frame even longer
+
+# Want to put together all outcomes, condition values, and baseline values while also creating a name column based on which model we're looking at 
+
+cope_long_data_baseline <- cope_long_data %>% 
+  dplyr::select(imp, b_response_id, c(b_drs_mean, b_bads_mean, b_iptq_mean)) %>% 
+  pivot_longer(
+    cols = is.numeric,
+    names_to = "measure",
+    values_to = "baseline" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+  mutate(measure = case_when(
+    
+    str_detect(measure, "drs") == T ~ "drs",
+    str_detect(measure, "bads") == T ~ "bads",
+    str_detect(measure, "iptq") == T ~ "iptq"
+    
+  )) %>%
+  print()
+
+cope_long_data_condition <- cope_long_data %>% 
+  dplyr::select(imp, b_response_id, condition) %>% 
+  pivot_longer(
+    cols = condition,
+    names_to = "measure",
+    values_to = "pred" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+  print()
+
+cope_long_data_condition_extra <- cope_long_data_condition
+
+## Have to resize the condition datafrmae since it only contains one variable, while the other dataframes contain five. Also need to add the correct format of measure vars
+
+cope_long_data_condition_resized <- cope_long_data_condition %>% 
+  bind_rows(cope_long_data_condition_extra) %>% 
+  bind_rows(cope_long_data_condition_extra) %>% 
+  arrange(imp, b_response_id) %>%
+  mutate(measure = c(rep(c("drs","bads","tptq"),100532))) %>% 
+  print()
+
+## NEED TO DO: Write a test here to double check that condition is combining correctly (Maybe do this in the next chunk as well/instead?)
+
+cope_long_data_outcome <- cope_long_data %>% 
+  dplyr::select(imp, b_response_id, c(f1_drs_mean, f1_bads_mean, pi_iptq_mean)) %>% 
+  pivot_longer(
+    cols = is.numeric,
+    names_to = "measure",
+    values_to = "out" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+    mutate(measure = case_when(
+    
+    str_detect(measure, "drs") == T ~ "drs",
+    str_detect(measure, "bads") == T ~ "bads",
+    str_detect(measure, "iptq") == T ~ "iptq"
+    
+  )) %>%
+  print()
+
+```
+
+```{r nesting by measure first seems to work}
+
+cope_long_data_unnested <- cope_long_data_baseline %>% 
+  left_join(cope_long_data_condition_resized, by = c("imp", "b_response_id", "measure")) %>% 
+  left_join(cope_long_data_outcome, by = c("imp", "b_response_id", "measure"))  %>%
+  dplyr::select(-b_response_id) %>% 
+  group_by(imp) %>% 
+  fill(pred) %>% 
+  ungroup() %>% 
+  relocate(imp, measure, pred, baseline, out)
+
+cope_long_data_unnested %>% 
+  count(pred)
+
+## Nesting by measure
+
+test_nest_by_measure_first <- cope_long_data_unnested %>% 
+  group_by(measure) %>%
+  nest()
+
+## Then splitting by imputation and applying the function
+
+# Create the function for this rmarkdown
+
+input_fun<-function(.data, outcome, predictor, covariate){
+  
+  lm_dat <- .data
+  
+  lm(as.formula(paste(outcome,"~",predictor,"+",paste(covariate,collapse = "+"))),data=lm_dat)
+}
+
+# Do it once
+
+cope_long_data_unnested %>% 
+  dplyr::select(-measure) %>% 
+  group_split(imp) %>% 
+  purrr::map(~input_fun(.data = .x, outcome="out",predictor="pred",covariate=c("baseline")))
+  
+## Now do it by funciton
+
+splitting_by_imp <- test_nest_by_measure_first %>% 
+  mutate(split_by_imp = purrr::map(data,~{
+    
+    new_data <- .x %>% 
+      group_split(imp) %>% 
+      purrr::map(~input_fun(.data = .x, outcome="out",predictor="pred",covariate=c("baseline")))
+      
+  }))
+
+## Unnest so we have access to all the models across all imputations for all outcomes
+
+lms_across_all_outcomes_and_imps <- splitting_by_imp %>% 
+  unnest(split_by_imp) %>% 
+  rename(lm_obj = split_by_imp)
+
+```
+
+```{r creating pairwise contrasts for all models bhs and shs 3 month}
+
+## Creating pairwise comparisons for all models https://stackoverflow.com/questions/65347058/emmeans-for-a-gls-model-doesnt-run-inside-map and https://cran.r-project.org/web/packages/emmeans/vignettes/comparisons.html
+
+all_pairwise_contrasts <- lms_across_all_outcomes_and_imps %>% 
+  mutate(contrast_means = map2(data, lm_obj, ~emmeans::emmeans(.y,"pred",data=.x)),
+         pairwise_contrasts = map(contrast_means, contrast, "pairwise", adjust = "none"), # Will be adjusting the p-values later (Want to go across all models)
+         tidied_contrasts = map(pairwise_contrasts, tidy),
+         tidied_lms = map(lm_obj, tidy))
+
+```
+
+
+```{r putting together info necessary for entire regression tables from mi meld reviewer requested outcomes}
+
+## Creating a dataframe of unnested lms
+
+# Needed to hack a way to creating the repeat structure necessary for imputations
+
+imp_nums <- expand_grid(one_set_of_imps = c(1:41),c(1:4))
+
+## Unnesting the linear models so we can have all the info we need for the mi.meld
+
+unnested_lms <- all_pairwise_contrasts %>% 
+  unnest(tidied_lms) %>% 
+  ungroup() %>% 
+  dplyr::select(measure, term:p.value) %>% 
+  mutate(imp = rep(imp_nums$one_set_of_imps,3),
+  measure_imp = str_c(measure, as.character(imp))) %>% 
+  print()
+
+# Creating a dataframe with only the rows we need to add to the unnested lms
+
+pp_vs_abc <- all_pairwise_contrasts %>% 
+  unnest(tidied_contrasts) %>% 
+  filter(str_detect(contrast, "Project ABC - Project Personality")) %>% 
+  ungroup() %>% 
+  dplyr::select(measure, term = contrast, estimate:p.value) %>% 
+  mutate(imp = rep(c(1:41), 3),
+         measure_imp = str_c(measure, as.character(imp))) %>% 
+  dplyr::select(-df) %>% 
+  print()
+
+## Now have created a dataframe that has all the information necessary (and displayed in a way that makes sense) to mi.meld for all predictors
+
+complete_lms <- unnested_lms %>% 
+  group_split(measure_imp) %>% 
+  map(~rows_insert(.x, pp_vs_abc, by = c("measure", "imp","estimate"))) %>% 
+  map_dfr(~{
+    
+    measure_imp_wanted <- .x %>% 
+      slice_head() %>% 
+      dplyr::select(measure_imp) %>% 
+      deframe()
+    
+    final_grouping <- .x %>% 
+      filter(str_detect(measure_imp, measure_imp_wanted))
+    
+  }) %>% 
+  arrange(measure, imp) %>% 
+  print()
+
+```
+
+
+```{r mi melding all components of each regression bhs and shs 3 month}
+
+## Aggregating regressions across imputations by measure
+
+# Do it once
+
+agg_ex <- complete_lms %>% 
+  filter(str_detect(measure, "bhs") & str_detect(term, "Intercept"))
+
+# Applying Rubin's rule across estimates and standard errors
+  
+mi_avg_agg_ex <- mi.meld(as.matrix(agg_ex$estimate),  as.matrix(agg_ex$std.error), byrow = T) #coefficient and standard error
+
+# Calculating the t value by taking the esimate divided by the standard error
+
+mi_avg_t_value_agg_ex <- mi_avg_agg_ex$q.mi[1,1] / mi_avg_agg_ex$se.mi[1,1]
+
+# Calculating p value from t value NEED TO DO: Come back and recalculate p values based on effect size, not sure if df are correct
+
+p <- 2*pt(-abs(mi_avg_t_value_agg_ex),df=2448)
+
+# Putting all of this into a tibble
+
+agg_ex_df <- tibble(measure = "bhs", estimate = mi_avg_agg_ex$q.mi[1,1], std_error = mi_avg_agg_ex$se.mi[1,1],
+                    t = mi_avg_t_value_agg_ex, p_value = p, df = 2448) %>% 
+  print()
+
+# Write a tidy function
+
+agg_lm_mi <- function(.data, measure_var, term_var, df_var){
+  
+  
+agg <- .data %>% 
+  filter(str_detect(measure, measure_var) & str_detect(term, term_var))
+
+# Applying Rubin's rule across estimates and standard errors
+  
+mi_avg_agg <- mi.meld(as.matrix(agg$estimate),  as.matrix(agg$std.error), byrow = T) #coefficient and standard error
+
+# Calculating the t value by taking the esimate divided by the standard error
+
+mi_avg_t_value_agg <- mi_avg_agg$q.mi[1,1] / mi_avg_agg$se.mi[1,1]
+
+# Calculating p value from t value
+
+p <- 2*pt(-abs(mi_avg_t_value_agg),df={{df_var}})
+
+# Putting all of this into a tibble
+
+agg__df <- tibble(measure = measure_var, term = term_var, estimate = mi_avg_agg$q.mi[1,1], std_error = mi_avg_agg$se.mi[1,1],
+                    t = mi_avg_t_value_agg, p_value = p, df = {{df_var}})
+  
+}
+
+complete_lms %>% 
+  agg_lm_mi(measure_var = "bhs", term_var = "Intercept", df_var = 2448) %>% 
+  print()
+
+## Now map over all combinations of measures and terms
+
+measures <- complete_lms %>% 
+  distinct(measure) %>% 
+  deframe()
+
+terms <- complete_lms %>% 
+  distinct(term) %>% 
+  deframe()
+
+all_meas_terms <- expand_grid(measures, terms) %>% 
+  mutate(df = rep(c(2448, 1637, 1629, 2448, 1632),3))
+
+agg_lms <- pmap_dfr(list(all_meas_terms$measures, all_meas_terms$terms, all_meas_terms$df), ~{
+  
+  complete_lms %>% 
+  agg_lm_mi(measure_var = ..1, term_var = ..2, df_var = ..3)
+  
+}) %>% 
+  print()
+
+```
+
+
+```{r creating regression tables programmatically with flextable bhs and shs 3 month}
+
+# Do it once
+
+agg_lms %>% 
+  filter(str_detect(measure, "bads")) %>% 
+  dplyr::select(-measure, -df) %>% 
+  mutate(term = case_when(
+    
+    str_detect(term, "Intercept") == T ~ "Intercept",
+    str_detect(term, "predProject ABC") == T ~ "Placebo - Project ABC",
+    str_detect(term, "predProject Personality") == T ~ "Placebo - Project Personality",
+    str_detect(term, "baseline") == T ~ "Baseline Value of Outcome Variable",
+    TRUE ~ term
+    
+    
+  ),
+  p_value = case_when(
+    
+    p_value <= .001 ~ "< .001",
+    p_value <= .01 & p_value > .001 ~ "< .01",
+    TRUE ~ as.character(round(p_value, 2))
+    
+  ),
+  across(c(estimate, std_error, t), ~format(round(.x, 2), nsmall = 2))) %>% 
+  rename(Predictor = term, Estimate = estimate, `Standard Error` = std_error, `p value` = p_value) %>% 
+  flextable() %>% 
+  add_header_lines(str_c(toupper("bhs")," 3 Month Follow Up")) %>%
+  autofit() %>% 
+  print()
+
+# Write a tidy function
+
+create_lm_table <- function(.data, measure_var, timing_text){
+  
+  lm_table <- agg_lms %>% 
+  filter(str_detect(measure, measure_var)) %>% 
+  dplyr::select(-measure, -df) %>% 
+  mutate(term = case_when(
+    
+    str_detect(term, "Intercept") == T ~ "Intercept",
+    str_detect(term, "predProject ABC") == T ~ "Placebo - Project ABC",
+    str_detect(term, "predProject Personality") == T ~ "Placebo - Project Personality",
+    str_detect(term, "baseline") == T ~ "Baseline Value of Outcome Variable",
+    TRUE ~ term
+    
+    
+  ),
+  p_value = case_when(
+    
+    p_value <= .001 ~ "< .001",
+    p_value <= .01 & p_value > .001 ~ "< .01",
+    TRUE ~ as.character(round(p_value, 2))
+    
+  ),
+  across(c(estimate, std_error, t), ~format(round(.x, 2), nsmall = 2))) %>% 
+  rename(Predictor = term, Estimate = estimate, `Standard Error` = std_error, `p value` = p_value) %>% 
+  flextable() %>% 
+  add_header_lines(str_c(toupper(measure_var),timing_text)) %>%
+  autofit()
+  
+}
+
+agg_lms %>% 
+  create_lm_table(measure_var = "bhs", timing_text = " 3 Month Follow Up") %>% 
+  print()
+
+# Map over all measures
+
+timings <- c(rep(" 3 Month Follow Up", 2), " Immediate Post-Intervention")
+
+lm_tables_3_month <- map2(c("bads","drs","iptq"), timings, ~{
+  
+  agg_lms %>% 
+  create_lm_table(measure_var = .x, timing_text = .y)
+  
+}) %>% 
+  print()
+
+# Saving tables
+
+# Saving files (Programmatically didn't work since they don't play nice with glue, which is too bad)
+
+save_as_docx(`bads 3 months`= lm_tables_3_month[[1]], path = "cope_lm_table_bads_3_months_word.docx")
+save_as_docx(`drs 3 months`= lm_tables_3_month[[2]], path = "cope_lm_table_drs_3_months_word.docx")
+save_as_docx(`iptq pi`= lm_tables_3_month[[3]], path = "cope_lm_table_iptq_pi_word.docx")
+
+```
+## Putting Together Table for Reviewer Requested SITBI Outcomes
+
+```{r putting together info necessary for entire regression tables from mi meld reviewer requested outcomes}
+
+## Creating a dataframe of unnested lms
+
+all_pairwise_contrasts <- read_rds("sitb_data_for_table.rds")
+
+# Needed to hack a way to creating the repeat structure necessary for imputations
+
+imp_nums <- expand_grid(one_set_of_imps = c(1:41),c(1:4))
+
+## Unnesting the linear models so we can have all the info we need for the mi.meld
+
+unnested_lms <- all_pairwise_contrasts %>% 
+  unnest(tidied_lms) %>% 
+  ungroup() %>% 
+  dplyr::select(measure, term:p.value) %>% 
+  mutate(imp = rep(imp_nums$one_set_of_imps,1),
+  measure_imp = str_c(measure, as.character(imp))) %>% 
+  print()
+
+# Creating a dataframe with only the rows we need to add to the unnested lms
+
+pp_vs_abc <- all_pairwise_contrasts %>% 
+  unnest(tidied_contrasts) %>% 
+  filter(str_detect(contrast, "Project ABC - Project Personality")) %>% 
+  ungroup() %>% 
+  dplyr::select(measure, term = contrast, estimate:p.value) %>% 
+  mutate(imp = rep(c(1:41), 1),
+         measure_imp = str_c(measure, as.character(imp))) %>% 
+  dplyr::select(-df) %>% 
+  print()
+
+## Now have created a dataframe that has all the information necessary (and displayed in a way that makes sense) to mi.meld for all predictors
+
+complete_lms <- unnested_lms %>% 
+  group_split(measure_imp) %>% 
+  map(~rows_insert(.x, pp_vs_abc, by = c("measure", "imp","estimate"))) %>% 
+  map_dfr(~{
+    
+    measure_imp_wanted <- .x %>% 
+      slice_head() %>% 
+      dplyr::select(measure_imp) %>% 
+      deframe()
+    
+    final_grouping <- .x %>% 
+      filter(str_detect(measure_imp, measure_imp_wanted))
+    
+  }) %>% 
+  arrange(measure, imp) %>% 
+  print()
+
+```
+
+
+```{r mi melding all components of each regression bhs and shs 3 month}
+
+## Aggregating regressions across imputations by measure
+
+complete_lms %>% 
+  agg_lm_mi(measure_var = "sitb", term_var = "Intercept", df_var = 2448) %>% 
+  print()
+
+## Now map over all combinations of measures and terms
+
+measures <- complete_lms %>% 
+  distinct(measure) %>% 
+  deframe()
+
+terms <- complete_lms %>% 
+  distinct(term) %>% 
+  deframe()
+
+all_meas_terms <- expand_grid(measures, terms) %>% 
+  mutate(df = rep(c(2448, 1637, 1629, 2448, 1632),1))
+
+agg_lms <- pmap_dfr(list(all_meas_terms$measures, all_meas_terms$terms, all_meas_terms$df), ~{
+  
+  complete_lms %>% 
+  agg_lm_mi(measure_var = ..1, term_var = ..2, df_var = ..3)
+  
+}) %>% 
+  print()
+
+```
+
+
+```{r creating regression tables programmatically with flextable bhs and shs 3 month}
+
+# Do it once
+
+sitb_table <- agg_lms %>% 
+  create_lm_table(measure_var = "sitb", timing_text = " 3 Month Follow Up")
+
+sitb_table
+
+# Saving tables
+
+# Saving files (Programmatically didn't work since they don't play nice with glue, which is too bad)
+
+save_as_docx(`sitb 3 months`= sitb_table, path = "cope_lm_table_sitb_3_months_word.docx")
+
+```
+

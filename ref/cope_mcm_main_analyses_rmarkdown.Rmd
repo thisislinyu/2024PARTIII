@@ -1,0 +1,3067 @@
+---
+title: "COPE Main Analyses"
+author: "Michael Mullarkey and Mallory Dobias"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 5
+    toc_float:
+      collapsed: no
+      smooth_scroll: no
+geometry: margin=0.50in
+---
+
+```{r setup, include=FALSE, cache = FALSE}
+require("knitr")
+## setting working directory
+knitr::opts_chunk$set(echo = TRUE, tidy = TRUE, warning = FALSE, message = FALSE, include = FALSE)
+```
+
+```{r loading packages, include = FALSE}
+
+if(!require(tidymodels)){install.packages('tidymodels')}
+library(tidymodels)
+if(!require(readr)){install.packages('readr')}
+library(readr)
+if(!require(broom.mixed)){install.packages('broom.mixed')}
+library(broom.mixed)
+if(!require(tidyverse)){install.packages('tidyverse')}
+library(tidyverse)
+if(!require(nycflights13)){install.packages('nycflights13')}
+library(nycflights13)
+if(!require(skimr)){install.packages('skimr')}
+library(skimr)
+if(!require(modeldata)){install.packages('modeldata')}
+library(modeldata)
+if(!require(ranger)){install.packages('ranger')}
+library(ranger)
+if(!require(vip)){install.packages('vip')}
+library(vip)
+if(!require(gt)){install.packages('gt')}
+library(gt)
+if(!require(ggthemes)){install.packages('ggthemes')}
+library(ggthemes)
+if(!require(xgboost)){install.packages('xgboost')}
+library(xgboost)
+if(!require(keras)){install.packages('keras')}
+library(keras)
+if(!require(furrr)){install.packages('furrr')}
+library(furrr)
+if(!require(kernlab)){install.packages('kernlab')}
+library(kernlab)
+if(!require(mlbench)){install.packages('mlbench')}
+library(mlbench)
+if(!require(scales)){install.packages('scales')}
+library(scales)
+# if(!require(tidyposterior)){install.packages('tidyposterior')}
+# library(tidyposterior)
+# if(!require(rstanarm)){install.packages('rstanarm')}
+# library(rstanarm)
+if(!require(tictoc)){install.packages('tictoc')}
+library(tictoc)
+# library(devtools)
+# devtools::install_github("abresler/nbastatR")
+# library(nbastatR)
+if(!require(heatmaply)){install.packages('heatmaply')}
+library(heatmaply)
+if(!require(ggmosaic)){install.packages('ggmosaic')}
+library(ggmosaic)
+if(!require(splines)){install.packages('splines')}
+library(splines)
+if(!require(doMC)){install.packages('doMC')}
+library(doMC)
+if(!require(glue)){install.packages('glue')}
+library(glue)
+if(!require(stacks)){install.packages('stacks')}
+library(stacks)
+if(!require(janitor)){install.packages('janitor')}
+library(janitor)
+if(!require(future)){install.packages('future')}
+library(future)
+if(!require(reticulate)){install.packages('reticulate')}
+library(reticulate)
+if(!require(furrr)){install.packages('furrr')}
+library(furrr)
+if(!require(tuber)){install.packages('tuber')}
+library(tuber)
+if(!require(tidytext)){install.packages('tidytext')}
+library(tidytext)
+if(!require(topicmodels)){install.packages('topicmodels')}
+library(topicmodels)
+if(!require(wordcloud)){install.packages('wordcloud')}
+library(wordcloud)
+if(!require(reshape2)){install.packages('reshape2')}
+library(reshape2)
+if(!require(youtubecaption)){install.packages('youtubecaption')}
+library(youtubecaption)
+if(!require(textrecipes)){install.packages('textrecipes')}
+library(textrecipes)
+if(!require(stopwords)){install.packages('stopwords')}
+library(stopwords)
+if(!require(hardhat)){install.packages('hardhat')}
+library(hardhat)
+if(!require(poissonreg)){install.packages('poissonreg')}
+library(poissonreg)
+if(!require(remotes)){install.packages('remotes')}
+library(remotes)
+# remotes::install_github('jorvlan/raincloudplots')
+# library(raincloudplots)
+if(!require(DescTools)){install.packages('DescTools')}
+library(DescTools)
+if(!require(readxl)){install.packages('readxl')}
+library(readxl)
+if(!require(modeest)){install.packages('modeest')}
+library(modeest)
+if(!require(psych)){install.packages('psych')}
+library(psych)
+# install_local("DTVEM_1.0010.tar.gz") # http://www.nicholasjacobson.com/project/dtvem/
+# library(DTVEM)
+# Loading DTVEM dependencies
+if(!require(mgcv)){install.packages('mgcv')}
+library(mgcv)
+if(!require(zoo)){install.packages('zoo')}
+library(zoo)
+if(!require(OpenMx)){install.packages('OpenMx')}
+library(OpenMx)
+if(!require(imputeTS)){install.packages('imputeTS')}
+library(imputeTS)
+if(!require(tfdatasets)){install.packages('tfdatasets')}
+library(tfdatasets)
+if(!require(rlang)){install.packages('rlang')}
+library(rlang)
+if(!require(RANN)){install.packages('RANN')}
+library(RANN)
+if(!require(baguette)){install.packages('baguette')}
+library(baguette)
+if(!require(rules)){install.packages('rules')}
+library(rules)
+if(!require(timetk)){install.packages('timetk')}
+library(timetk)
+if(!require(tidyquant)){install.packages('tidyquant')}
+library(tidyquant)
+if(!require(tsibble)){install.packages('tsibble')}
+library(tsibble)
+if(!require(feasts)){install.packages('feasts')}
+library(feasts)
+if(!require(dtw)){install.packages('dtw')}
+library(dtw)
+if(!require(parallelDist)){install.packages('parallelDist')}
+library(parallelDist)
+if(!require(pheatmap)){install.packages('pheatmap')}
+library(pheatmap)
+if(!require(diffdf)){install.packages('diffdf')}
+library(diffdf)
+if(!require(tableone)){install.packages('tableone')}
+library(tableone)
+if(!require(tableone)){install.packages('tableone')}
+library(tableone)
+if(!require(corrr)){install.packages('corrr')}
+library(corrr)
+if(!require(Amelia)){install.packages('Amelia')}
+library(Amelia)
+if(!require(MOTE)){install.packages('MOTE')}
+library(MOTE)
+if(!require(fuzzyjoin)){install.packages('fuzzyjoin')}
+library(fuzzyjoin)
+if(!require(car)){install.packages('car')}
+library(car)
+if(!require(lsmeans)){install.packages('lsmeans')}
+library(lsmeans)
+if(!require(fastDummies)){install.packages('fastDummies')}
+library(fastDummies)
+if(!require(lmtest)){install.packages('lmtest')}
+library(lmtest)
+if(!require(sandwich)){install.packages('sandwich')}
+library(sandwich)
+# remotes::install_github('jorvlan/raincloudplots')
+library(raincloudplots)
+if(!require(patchwork)){install.packages('patchwork')}
+library(patchwork)
+if(!require(gtsummary)){install.packages('gtsummary')}
+library(gtsummary)
+if(!require(flextable)){install.packages('flextable')}
+library(flextable)
+if(!require(pwr)){install.packages('pwr')}
+library(pwr)
+if(!require(TOSTER)){install.packages('TOSTER')}
+library(TOSTER)
+
+
+## Let's set our number of cores for this document (May differ across computers)
+
+registerDoMC(cores = 7)
+
+```
+
+## Reading in the Data Generated by Preprocessing Code
+
+```{r reading in the data, include = TRUE}
+
+## Creating cleaned data
+
+cope_full_data  <- read_rds("cleaned_cope_data_randomized.rds")
+
+## Let's retain only folks who are randomized for these analyses
+
+cope_full_data_randomized <- cope_full_data %>% 
+  filter(!is.na(condition))
+
+```
+
+```{r a priori power analysis}
+
+## Let's assume we only have 800 people in each group. We would have 98% power to detect a small effect size (d = 0.20)
+
+pwr.t.test(n = 800, d = 0.20, sig.level = 0.05)
+
+```
+
+## Looking at Differences in Dropout Across Conditions
+
+```{r}
+
+dropout <- cope_full_data_randomized %>% 
+  mutate(pi_dropout = case_when(
+    is.na(b_pfs_1) ~ 1,
+    TRUE ~ 0
+    ),
+    f1_dropout = case_when(
+      is.na(f1_cdi_mean) ~ 1,
+      TRUE ~ 0
+    )
+    )
+
+# Total randomized sample size
+
+sample_size_df <- cope_full_data_randomized %>% 
+  group_by(condition) %>% 
+  tally() %>% 
+  print()
+
+# Looking at dropout immediate post-intervention
+
+pi_drop_df <- dropout %>% 
+  group_by(condition) %>% 
+  tally(pi_dropout) %>% 
+  print()
+
+# Looking at dropout at follow-up
+
+f1_drop_df <- dropout %>% 
+  group_by(condition) %>% 
+  tally(f1_dropout) %>% 
+  print()
+
+## Testing dropout across groups, it's significant at both immediate post-treatment and 
+
+pi_prop <- prop.test(x = c(pi_drop_df[[1,2]], pi_drop_df[[2,2]], pi_drop_df[[3,2]]), n = c(sample_size_df[[1,2]], sample_size_df[[2,2]], sample_size_df[[3,2]]))
+
+pi_prop
+
+fi_prop <- prop.test(x = c(f1_drop_df[[1,2]], f1_drop_df[[2,2]], f1_drop_df[[3,2]]), n = c(sample_size_df[[1,2]], sample_size_df[[2,2]], sample_size_df[[3,2]]))
+
+fi_prop
+
+```
+## Can We Predict Who Dropped Out Using Baseline Info?
+
+No, don't do any better than chance at predicting who would drop out at either post-intervention or follow-up (ROCs of 0.51 and 0.56 respectively)
+
+```{r}
+
+## Can we predict who dropped out
+
+dropout_pred_df <- dropout %>% 
+  dplyr::select(c(b_dem_gender_agender:b_dem_race_na),b_cdi_mean, b_screener_age,pi_dropout,f1_dropout) %>% 
+  mutate(pi_dropout = factor(case_when(
+    pi_dropout == 0 ~ "No",
+    pi_dropout == 1 ~ "Yes",
+    TRUE ~ NA_character_
+  )),
+  f1_dropout = factor(case_when(
+    f1_dropout == 0 ~ "No",
+    f1_dropout == 1 ~ "Yes",
+    TRUE ~ NA_character_
+  )))
+
+# Let's create a predictive model
+
+lr_mod <- logistic_reg() %>% 
+  set_engine("glm")
+
+# And create a preprocessing recipe
+
+pi_drop_rec <- recipe(pi_dropout ~ ., data = dropout_pred_df) %>% 
+  step_rm(f1_dropout)
+
+# To feed into a tidymodels workflow
+
+pi_drop_wf <- workflow() %>% 
+  add_recipe(pi_drop_rec) %>% 
+  add_model(lr_mod)
+
+# To predict using 10 fold cross-validation
+
+set.seed(33)
+drop_folds <- vfold_cv(data = dropout_pred_df, v = 10, strata = pi_dropout)
+
+pi_drop_rs <-
+  pi_drop_wf %>% 
+  fit_resamples(drop_folds)
+
+collect_metrics(pi_drop_rs) %>% 
+  filter(str_detect(.metric, "roc_auc"))
+
+# How about for follow-up?
+
+# And create a preprocessing recipe
+
+f1_drop_rec <- recipe(f1_dropout ~ ., data = dropout_pred_df) %>% 
+  step_rm(pi_dropout)
+
+# To feed into a tidymodels workflow
+
+f1_drop_wf <- workflow() %>% 
+  add_recipe(f1_drop_rec) %>% 
+  add_model(lr_mod)
+
+# To predict using 10 fold cross-validation
+
+set.seed(33)
+drop_f1_folds <- vfold_cv(data = dropout_pred_df, v = 10, strata = f1_dropout)
+
+f1_drop_rs <-
+  f1_drop_wf %>% 
+  fit_resamples(drop_f1_folds)
+
+collect_metrics(f1_drop_rs) %>% 
+  filter(str_detect(.metric, "roc_auc"))
+
+```
+
+
+## Setting Up Data to Be Imputed and Determining The Maximum Percent Missing for Any Outcome
+
+```{r setting up data to be imputed and calculating maximum percent missing to determine imputation structure, include = TRUE}
+
+# Imputing data
+
+# Selecting variables for imputation
+
+cope_imp <- cope_full_data_randomized %>% 
+  dplyr::select(b_response_id, condition, contains("mean")) %>% 
+  mutate(condition = factor(case_when(
+    
+    condition == "0" ~ "Placebo Control",
+    condition == "1" ~ "Project Personality",
+    condition == "2" ~ "Project ABC",
+    TRUE ~ NA_character_
+    
+  ))) %>% 
+  as.data.frame()
+
+## What's our highest level of missingness?
+
+calculate_percent_missing <- function(.data, var){
+  
+  .data %>% 
+    group_by({{var}}) %>% 
+    tally() %>% 
+    filter(is.na({{var}})) %>% 
+    mutate(percent_missing = (n/nrow(cope_imp))*100) %>% 
+    dplyr::select(-n)
+  
+}
+
+## Map over all variables in this dataframe
+
+names_imputed_variables <- cope_imp %>% 
+  names()
+
+percent_missing_all_imputed_variables <- map(names_imputed_variables, ~{
+  
+  cope_imp %>% 
+    calculate_percent_missing(.data[[.x]])
+  
+}) %>% 
+  print()
+
+## COPE completers at all time points only
+
+cope_imp_comp <- cope_full_data_randomized %>% 
+  dplyr::select(b_response_id, condition, contains("mean")) %>% 
+  filter(!is.na(f1_cdi_mean)) %>% 
+  mutate(condition = factor(case_when(
+    
+    condition == "0" ~ "Placebo Control",
+    condition == "1" ~ "Project Personality",
+    condition == "2" ~ "Project ABC",
+    TRUE ~ NA_character_
+    
+  ))) %>% 
+  as.data.frame()
+
+## COPE Completers of intervention only but follow-up still imputed
+
+cope_imp_fu <- cope_full_data_randomized %>% 
+  filter(!is.na(b_pfs_1)) %>% 
+  dplyr::select(b_response_id, condition, contains("mean")) %>% 
+  mutate(condition = factor(case_when(
+    
+    condition == "0" ~ "Placebo Control",
+    condition == "1" ~ "Project Personality",
+    condition == "2" ~ "Project ABC",
+    TRUE ~ NA_character_
+    
+  ))) %>% 
+  as.data.frame()
+
+
+```
+## Running the Analyses on Completers Only
+
+## Setting Up the Data for Many Models
+
+```{r}
+
+reduced_df <- cope_imp_comp %>% 
+  dplyr::select(b_response_id, condition, contains("cdi"),contains("gad"),contains("shs"),contains("bhs"),contains("cts")) %>% 
+  dplyr::select(-f1_shs_mean,-f1_bhs_mean)
+
+cov_df <- reduced_df %>% 
+  dplyr::select(contains("b_")) %>% 
+  pivot_longer(
+    cols = c(b_cdi_mean:b_cts_rs_mean),
+    names_to = "measure",
+    values_to = "baseline",
+  ) %>% 
+  mutate(measure = case_when(
+    
+    str_detect(measure, "bhs") == T ~ "bhs",
+    str_detect(measure, "shs") == T ~ "shs",
+    str_detect(measure, "cdi") == T ~ "cdi",
+    str_detect(measure, "cts") == T ~ "cts",
+    str_detect(measure, "gad") == T ~ "gad",
+    
+  )) %>%
+  print()
+
+cond_df <- reduced_df %>% 
+  dplyr::select(b_response_id, condition) %>% 
+  pivot_longer(
+    cols = condition,
+    names_to = "measure",
+    values_to = "pred"
+  ) %>% 
+  print()
+
+cond_df_extra <- cond_df
+
+cond_df_resize <- cond_df %>% 
+  bind_rows(cond_df_extra) %>% 
+  bind_rows(cond_df_extra) %>% 
+  bind_rows(cond_df_extra) %>% 
+  bind_rows(cond_df_extra) %>% 
+  arrange(b_response_id) %>% 
+  mutate(measure = c(rep(c("bhs","shs","cdi","cts","gad"),1503))) %>% 
+  print()
+
+outcome_df <- reduced_df %>% 
+  dplyr::select(b_response_id, contains("f1_"),contains("pi_")) %>% 
+  pivot_longer(
+    cols = c(f1_cdi_mean:pi_bhs_mean),
+    names_to = "measure",
+    values_to = "out",
+  ) %>% 
+  mutate(measure = case_when(
+    
+    str_detect(measure, "bhs") == T ~ "bhs",
+    str_detect(measure, "shs") == T ~ "shs",
+    str_detect(measure, "cdi") == T ~ "cdi",
+    str_detect(measure, "cts") == T ~ "cts",
+    str_detect(measure, "gad") == T ~ "gad"
+  )) %>%
+  print()
+
+long_df_unnest <- cov_df %>% 
+  left_join(cond_df_resize, by = c("b_response_id", "measure")) %>% 
+  left_join(outcome_df, by = c("b_response_id","measure")) %>% 
+  relocate(b_response_id, measure, pred, baseline, out) %>% 
+  group_by(b_response_id) %>% 
+  fill(pred, .direction = "downup") %>% 
+  ungroup() %>% 
+  print()
+
+```
+## Running Many Models and Creating Pairwise Contrasts
+
+```{r}
+
+input_fun<-function(.data, outcome, predictor, covariate){
+  
+  lm_dat <- .data
+  
+  lm(as.formula(paste(outcome,"~",predictor,"+",paste(covariate,collapse = "+"))),data=lm_dat)
+}
+
+comp_contrasts <- long_df_unnest %>% 
+  dplyr::select(-b_response_id) %>% 
+  group_by(measure) %>% 
+  nest() %>% 
+  mutate(lm_obj = purrr::map(data, ~input_fun(.data = ., outcome="out",predictor="pred",covariate=c("baseline"))),
+         contrast_means = map2(data, lm_obj, ~emmeans::emmeans(.y,"pred",data=.x)),
+         pairwise_contrasts = map(contrast_means, contrast, "pairwise", adjust = "none"), # Will be adjusting the p-values later (Want to go across all models)
+         tidied_contrasts = map(pairwise_contrasts, tidy),
+         tidied_lms = map(lm_obj, tidy)) %>% 
+  print()
+
+
+```
+
+## Recalculating N by Condition and Running Outcome Function Once
+
+```{r}
+
+# Do it once
+
+results_ex <- comp_contrasts %>% 
+  filter(str_detect(measure, "bhs")) %>% 
+  unnest(tidied_contrasts) %>% 
+  ungroup() %>% 
+  dplyr::select(measure, contrast, estimate, std.error) %>% 
+  filter(str_detect(contrast, "Placebo Control - Project ABC")) %>% 
+  mutate(t_value = estimate / std.error)
+
+t_value <- results_ex %>% 
+  dplyr::select(t_value) %>% 
+  deframe()
+
+n_by_cond <- cope_imp_comp %>% 
+  group_by(condition) %>% 
+  tally()
+
+d.ind.t.t <- function(t_value, n1, n2, a = 0.05) {
+  # Example: Compute Cohen's d from t-value and sample sizes
+  # Assuming it's Cohen's d for independent samples t-test
+  d <- t_value / sqrt((n1 + n2) / (n1 * n2))  # This is a simplified example
+  
+  # Return the result (you might have other calculations)
+  return(d)
+}
+
+get_comp_results <- function(.data, measure_var, contrast_var){
+  
+  ## Extracting estimate/standard error
+
+results <- .data %>% 
+  filter(str_detect(measure, measure_var)) %>% 
+  unnest(tidied_contrasts) %>% 
+  ungroup() %>% 
+  dplyr::select(measure, contrast, estimate, std.error) %>% 
+  filter(str_detect(contrast, contrast_var)) %>% 
+  mutate(t_value = estimate / std.error)
+
+t_value <- results %>% 
+  dplyr::select(t_value) %>% 
+  deframe()
+
+# Calculating d effect size with confidence intervals based on the t value using the MOTE package
+## See also https://www.aggieerin.com/shiny-server/tests/indtt.html
+
+# Creating programmatic condition names https://stackoverflow.com/questions/4350440/split-data-frame-string-column-into-multiple-columns
+
+ group_names <- str_split_fixed(results$contrast, " - ", n = 2) %>% 
+   as_tibble() %>% 
+   rename(group_1 = V1, group_2 = V2) %>% 
+   slice_head()
+ 
+ n1 <- n_by_cond %>% 
+   filter(condition == group_names$group_1) %>% 
+   dplyr::select(n) %>% 
+   deframe()
+ 
+ n2 <- n_by_cond %>% 
+   filter(condition == group_names$group_2) %>% 
+   dplyr::select(n) %>% 
+   deframe()
+ 
+ results_t_test <- d.ind.t.t(t_value, n1, n2, a = 0.05) # t value, n group 1, n group 2, alpha level
+ 
+ t_test_result_tibble <- list(results_t_test)
+ # %>% 
+ #  flatten() %>% 
+  # as_tibble()
+ 
+ 
+ measure_contrast_info <- results %>% 
+   slice_head() %>% 
+   dplyr::select(measure, contrast)
+ 
+ final_result <- t_test_result_tibble %>% 
+   bind_cols(measure_contrast_info) %>% 
+   relocate(measure, contrast, everything())
+ 
+return(final_result)
+
+}
+
+## The function works once!
+
+comp_contrasts %>% 
+  get_comp_results(measure_var = "bhs", contrast_var = "Placebo Control - Project ABC") %>%
+  print()
+
+```
+## All Results for All Models For Completers
+
+The general pattern of results holds for completers. The only minor differences are the effect of Project Personality on CTS is marginally significant (p = 0.07) and Project Personality has a significantly stronger effect on anxiety than Project ABC (p = .045).
+
+```{r mapping over all measures and potential contrasts while applying rubins rule, include = TRUE}
+
+## Create expanded grid of all combinations of measures and contrasts
+
+contrasts <- c("Placebo Control - Project ABC", "Placebo Control - Project Personality", "Project ABC - Project Personality")
+measures <- comp_contrasts$measure
+
+all_contrasts_measures <- expand_grid(contrasts, measures) %>% 
+  print()
+
+## Create a dataframe with all results across all measures and contrasts
+
+all_completers_results <- map2_dfr(all_contrasts_measures$measures, all_contrasts_measures$contrasts, ~{
+  
+  comp_contrasts %>% 
+  get_comp_results(measure_var = .x, contrast_var = .y)
+  
+}
+  ) %>% 
+  print()
+```
+
+
+```{r imputing data and visualizing results of imputatio, include = TRUE}
+               
+# Running the multiple imputation model
+# Note, we're matching m to match the % of missing data in our outcome variables rounding up
+set.seed(33)
+cope_out <- amelia(cope_imp, m = 41, noms = c("condition"), idvars = "b_response_id")
+
+# Creating diagnostic plots
+compare.density(cope_out, var = "f1_cdi_mean")
+
+overimpute(cope_out, var = "f1_cdi_mean")
+
+```
+
+
+```{r creating long format tibble of amelia imputations object to make many models possible}
+
+## Creating long data of Amelia imputations object that we can use to nest each imputation and map functions over each imputation
+
+imp_df <- as.data.frame(cope_out$imputations)
+
+long_imp_df_vars <- imp_df %>% 
+  pivot_longer(
+    cols = everything(),
+    names_to = c("imp",".value"),
+    names_pattern = "([[:alnum:]]+)\\.([[:alnum:]]+[[:punct:]]+[[:alnum:]]+[[:punct:]]+[[:alnum:]]+)" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+  filter(!is.na(imp)) %>% 
+  print()
+
+## Need to a separate pivot for the condition variable since it's differently structured (Probably not necessary but it's the way I can make it work for now)
+
+long_imp_df_condition <- imp_df %>% 
+  dplyr::select(contains("condition")) %>% 
+  pivot_longer(
+    cols = everything(),
+    names_to = c("imp",".value"),
+    names_pattern = "([[:alnum:]]+)\\.([[:alnum:]])" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+  filter(!is.na(imp)) %>% 
+  rename(condition = c) %>% 
+  print()
+
+long_imp_df <- long_imp_df_vars %>% 
+  bind_cols(long_imp_df_condition %>% dplyr::select(condition)) %>% 
+  print()
+
+## Running the assumption checks on each imputation for one set of variables
+```
+
+```{r mapping this many models pipeline across many variables in toy data}
+
+## This answer looks promising... https://stackoverflow.com/questions/56689304/can-map-take-functions-with-multiple-inputs
+
+## Doing it with toy data first
+
+df <- data.frame(
+  out = sample(c(1:10),40,replace=TRUE),
+  pre = sample(c(1:30),40,replace = TRUE),
+  var1 = sample(c(1:20),40,replace = TRUE),
+  var2 = sample(c(1:50),40,replace = TRUE),
+  group = c(rep(1, 20),rep(2, 20)),
+  name = c(rep(c("bhs", "cdi"), 20))
+)
+
+# Creating nested data frame, nesting by group (think imputation)
+
+df_by_group<-df%>%
+  group_by(group)%>%
+  nest()
+
+# This formula style function lets us pass in the variable names in a way that lets the function work
+
+input_fun<-function(.data, outcome, predictor, covariate){
+  
+  lm_dat <- .data
+  
+  lm(as.formula(paste(outcome,"~",predictor,"+",paste(covariate,collapse = "+"))),data=lm_dat)
+}
+
+input_fun(.data = df, outcome="out",predictor="pre",covariate=c("var1"))
+
+safely_input_fun <- safely(input_fun)
+
+models <- df_by_group %>%
+  mutate(mod = purrr::map(data, ~input_fun(.data = ., outcome="out",predictor="pre",covariate=c("var1"))),
+         tidied = map(mod, tidy),
+         glances = map(mod, broom::glance),
+         homoskedasticity = walk(mod, ~{
+           
+           fitted <- .x$fitted.values
+           residuals <- .x$residuals
+           plot(fitted,residuals)
+           
+         })) %>% 
+  print()
+
+## Getting all models
+
+models %>% 
+  unnest(tidied) %>% 
+  print()
+
+## And there general stats
+
+models %>% 
+  unnest(glances) %>% 
+  print()
+  
+
+```
+
+```{r reformatting our data to match the toy data}
+
+# Saving the data for the table rmarkdown
+
+write_rds(long_imp_df, "cope_data_for_bhs_shs_3_months.rds")
+
+## I think we need to make this long data frame even longer. In order to run many models all at once, we need all the condition variables in one column, all the baseline covariate values in one column, and all the outcomes in one column. Since we're doing 5 different models, we'll need a dataframe 5x as long as the current one to contain all of the rows necessary to do that. This dataframe can be created naturally for the baseline covariate and the outcome (since we have to pivot 5 variables longer and so the dataframe will naturally get five times as large). For condition, since we're only pivoting one variable this natural expansion won't happen via the pivot, so we have to duplicate the condition dataframe 4 times and add it to the original, giving us the same sized dataframe as the baseline and outcome.
+
+# Want to put together all outcomes, condition values, and baseline values while also creating a name column based on which model we're looking at 
+
+long_imp_df_baseline <- long_imp_df %>% 
+  dplyr::select(imp, b_response_id, c(b_bhs_mean, b_shs_mean, b_cdi_mean, b_cts_rs, b_gad_mean, b_drs_mean)) %>% 
+  pivot_longer(
+    cols = is.numeric,
+    names_to = "measure",
+    values_to = "baseline" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+  mutate(measure = case_when(
+    
+    str_detect(measure, "bhs") == T ~ "bhs",
+    str_detect(measure, "shs") == T ~ "shs",
+    str_detect(measure, "cdi") == T ~ "cdi",
+    str_detect(measure, "cts") == T ~ "cts",
+    str_detect(measure, "gad") == T ~ "gad",
+    str_detect(measure, "drs") == T ~ "drs"
+    
+  )) %>%
+  print()
+
+long_imp_df_condition <- long_imp_df %>% 
+  dplyr::select(imp, b_response_id, condition) %>% 
+  pivot_longer(
+    cols = condition,
+    names_to = "measure",
+    values_to = "pred" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+  print()
+
+long_imp_df_condition_extra <- long_imp_df_condition
+
+## Have to resize the condition datafrmae since it only contains one variable, while the other dataframes contain five. Also need to add the correct format of measure vars
+
+long_imp_df_condition_resized <- long_imp_df_condition %>% 
+  bind_rows(long_imp_df_condition_extra) %>% 
+  bind_rows(long_imp_df_condition_extra) %>% 
+  bind_rows(long_imp_df_condition_extra) %>%
+  bind_rows(long_imp_df_condition_extra) %>%
+  bind_rows(long_imp_df_condition_extra) %>%
+  arrange(imp, b_response_id) %>%
+  mutate(measure = c(rep(c("bhs","shs","cdi","cts","gad","drs"),100532))) %>% 
+  print()
+    
+class(long_imp_df_condition_resized)
+
+long_imp_df_outcome <- long_imp_df %>% 
+  dplyr::select(imp, b_response_id, c(pi_bhs_mean, pi_shs_mean, f1_cdi_mean, f1_cts_rs, f1_gad_mean, f1_drs_mean)) %>% 
+  pivot_longer(
+    cols = is.numeric,
+    names_to = "measure",
+    values_to = "out" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+    mutate(measure = case_when(
+    
+    str_detect(measure, "bhs") == T ~ "bhs",
+    str_detect(measure, "shs") == T ~ "shs",
+    str_detect(measure, "cdi") == T ~ "cdi",
+    str_detect(measure, "cts") == T ~ "cts",
+    str_detect(measure, "gad") == T ~ "gad",
+    str_detect(measure, "drs") == T ~ "drs"
+    
+  )) %>%
+  print()
+
+# Let's make sure the measures are in the same order across all of the datasets
+
+all(long_imp_df_condition_resized$measure == long_imp_df_baseline$measure)
+all(long_imp_df_condition_resized$measure == long_imp_df_outcome$measure)
+all(long_imp_df_baseline$measure == long_imp_df_outcome$measure)
+
+```
+
+```{r nesting by measure first seems to work}
+
+## Binding these extra long dataframes together
+
+long_imp_df_unnested_initial <- long_imp_df_baseline %>% 
+  left_join(long_imp_df_condition_resized, by = c("imp", "b_response_id", "measure")) %>% 
+  left_join(long_imp_df_outcome, by = c("imp", "b_response_id", "measure"))  %>%
+  relocate(imp, measure, pred, baseline, out)
+
+## Let's do a spot check at random to make sure the correct values of different variables are ending up in the right places (Made sure to select a participant who had missing data at post-intervention and follow-up so the numbers would be different across imputations)
+
+test_bhs_response_long <- long_imp_df %>% 
+  filter(str_detect(imp, "imp10") & str_detect(b_response_id, "R_r3FCy97x6xoH1yF")) %>% 
+  dplyr::select(pi_bhs_mean) %>% 
+  deframe() %>% 
+  print()
+  
+test_bhs_response_longer <- long_imp_df_unnested_initial %>% 
+  filter(str_detect(imp, "imp10") & str_detect(b_response_id, "R_r3FCy97x6xoH1yF") & str_detect(measure, "bhs")) %>% 
+  dplyr::select(out) %>% 
+  deframe() %>% 
+  print()
+
+## And they're the same! This spot check indicates the data has been pivoted in a way that works
+
+test_bhs_response_long == test_bhs_response_longer
+
+## Now removing response id so we can do the many models setup
+
+long_imp_df_unnested <- long_imp_df_unnested_initial %>% 
+  dplyr::select(-b_response_id)
+
+## Nesting by measure
+
+test_nest_by_measure_first <- long_imp_df_unnested %>% 
+  group_by(measure) %>%
+  nest()
+
+## Then splitting by imputation and applying the function
+
+# Do it once
+
+long_imp_df_unnested %>% 
+  dplyr::select(-measure) %>% 
+  group_split(imp) %>% 
+  purrr::map(~input_fun(.data = .x, outcome="out",predictor="pred",covariate=c("baseline")))
+  
+## Now do it by funciton
+
+splitting_by_imp <- test_nest_by_measure_first %>% 
+  mutate(split_by_imp = purrr::map(data,~{
+    
+    new_data <- .x %>% 
+      group_split(imp) %>% 
+      purrr::map(~input_fun(.data = .x, outcome="out",predictor="pred",covariate=c("baseline")))
+      
+  }))
+
+## Unnest so we have access to all the models across all imputations for all outcomes
+
+lms_across_all_outcomes_and_imps <- splitting_by_imp %>% 
+  unnest(split_by_imp) %>% 
+  rename(lm_obj = split_by_imp)
+
+```
+
+```{r now lets look at assumptions by model}
+
+## Do it once
+
+lms_across_all_outcomes_and_imps %>% 
+  filter(str_detect(measure, "bhs")) %>% 
+  mutate(
+         homoskedasticity = map(lm_obj, ~{
+           
+           fitted <- .x$fitted.values
+           residuals <- .x$residuals
+           plot(fitted,residuals)
+           
+         }),
+         normality_qqplot = map(lm_obj, ~{
+           
+           qqnorm(.x$residuals)
+           qqline(.x$residuals)
+           
+         }),
+         normality_hist = map(lm_obj, ~{
+           
+           hist(.x$residuals, xlim=c(-4,4), breaks=10)
+           
+         }),
+         collinearity_vif = map(lm_obj, ~{
+           
+           car::vif(.x)
+           
+         }),
+         outlier_cooksdist <- map(lm_obj, ~{
+           
+           cook <- cooks.distance(.x)
+           plot(cook, ylab="Cook's distances")
+           
+         })
+         ) %>% 
+  print()
+
+## Now write a function
+
+check_lm_assumptions <- function(.data, measure_var){
+  
+  .data %>% 
+  filter(str_detect(measure, measure_var)) %>% 
+  mutate(
+         homoskedasticity = map(lm_obj, ~{
+           
+           fitted <- .x$fitted.values
+           residuals <- .x$residuals
+           plot(fitted,residuals)
+           
+         }),
+         normality_qqplot = map(lm_obj, ~{
+           
+           qqnorm(.x$residuals)
+           qqline(.x$residuals)
+           
+         }),
+         normality_hist = map(lm_obj, ~{
+           
+           hist(.x$residuals, xlim=c(-4,4), breaks=10)
+           
+         }),
+         collinearity_vif = map(lm_obj, ~{
+           
+           car::vif(.x)
+           
+         }),
+         outlier_cooksdist <- map(lm_obj, ~{
+           
+           cook <- cooks.distance(.x)
+           plot(cook, ylab="Cook's distances")
+           
+         })
+         ) %>% 
+  print()
+  
+}
+
+lms_across_all_outcomes_and_imps %>% 
+  check_lm_assumptions(measure_var = "bhs")
+
+```
+
+## Assumptions for Linear Regression are Generally Met Across All Models (With the Potential Exceptions of Homoskedasticity in BHS and SHS Models)
+
+```{r mapping over all models to look at assumptions, include = TRUE}
+
+## Now map across all variables
+
+all_assumption_checks <- map(test_nest_by_measure_first$measure, ~{
+  
+  lms_across_all_outcomes_and_imps %>% 
+  check_lm_assumptions(measure_var = .x)
+  
+})
+
+```
+
+```{r creating pairwise contrasts for all models}
+
+## Creating pairwise comparisons for all models https://stackoverflow.com/questions/65347058/emmeans-for-a-gls-model-doesnt-run-inside-map and https://cran.r-project.org/web/packages/emmeans/vignettes/comparisons.html
+
+all_pairwise_contrasts <- lms_across_all_outcomes_and_imps %>% 
+  mutate(contrast_means = map2(data, lm_obj, ~emmeans::emmeans(.y,"pred",data=.x)),
+         pairwise_contrasts = map(contrast_means, contrast, "pairwise", adjust = "none"), # Will be adjusting the p-values later (Want to go across all models)
+         tidied_contrasts = map(pairwise_contrasts, tidy),
+         tidied_lms = map(lm_obj, tidy))
+
+# Saving the data for the table rmarkdown for 5 original models
+
+write_rds(all_pairwise_contrasts, "cope_data_for_5_orig_lms.rds")
+
+```
+
+
+```{r getting results from pairwise contrasts once and creating function}
+
+# Do it once
+
+## Extracting estimate/standard error
+
+results_bhs <- all_pairwise_contrasts %>% 
+  filter(str_detect(measure, "bhs")) %>% 
+  unnest(tidied_contrasts) %>% 
+  ungroup() %>% 
+  dplyr::select(measure, contrast, estimate, std.error) %>% 
+  filter(str_detect(contrast, "Placebo Control - Project ABC")) %>% 
+  print()
+
+## Getting the names for each group
+
+group_names <- str_split_fixed(results_bhs$contrast, " - ", n = 2) %>% 
+  as_tibble() %>% 
+  rename(group_1 = V1, group_2 = V2) %>% 
+  slice_head() %>% 
+  print()
+
+## Demonstrating we can programmatically create the sample size by group (Important for t test later)
+
+n_by_cond <- cope_imp %>% 
+  group_by(condition) %>% 
+  tally() %>% 
+  print()
+
+n1 <- n_by_cond %>% 
+  filter(condition == group_names$group_1) %>% 
+  dplyr::select(n) %>% 
+  deframe() %>% 
+  print()
+
+mi_avg_est_bhs_robust <- mi.meld(as.matrix(results_bhs$estimate),  as.matrix(results_bhs$std.error), byrow = T) #coefficient and standard error
+
+# Calculating the t value by taking the esimate divided by the standard error
+mi_avg_t_value_bhs_robust <- mi_avg_est_bhs_robust$q.mi[1,1] / mi_avg_est_bhs_robust$se.mi[1,1]
+
+# Calculating d effect size with confidence intervals based on the t value using the MOTE package
+## See also https://www.aggieerin.com/shiny-server/tests/indtt.html
+# view(dfSummary(save_data$condition)) #checking n in each condition
+
+n_by_cond <- cope_imp %>% 
+  group_by(condition) %>% 
+  tally()
+
+n1 <- n_by_cond %>% 
+  filter(condition == "Placebo Control") %>% 
+  dplyr::select(n) %>% 
+  deframe()
+
+n2 <- n_by_cond %>% 
+  filter(condition == "Project ABC") %>% 
+  dplyr::select(n) %>% 
+  deframe()
+
+results_bhs_robust <- d.ind.t.t(mi_avg_t_value_bhs_robust, n1, n2, a = 0.05) # t value, n group 1, n group 2, alpha level
+results_bhs_robust
+
+## Now write the function
+
+get_mi_results <- function(.data, measure_var, contrast_var){
+  
+  ## Extracting estimate/standard error
+
+results <- .data %>% 
+  filter(str_detect(measure, measure_var)) %>% 
+  unnest(tidied_contrasts) %>% 
+  ungroup() %>% 
+  dplyr::select(measure, contrast, estimate, std.error) %>% 
+  filter(str_detect(contrast, contrast_var)) 
+
+mi_avg_est <- mi.meld(as.matrix(results$estimate),  as.matrix(results$std.error), byrow = T) #coefficient and standard error
+
+# Calculating the t value by taking the esimate divided by the standard error
+mi_avg_t_value <- mi_avg_est$q.mi[1,1] / mi_avg_est$se.mi[1,1]
+
+# Calculating d effect size with confidence intervals based on the t value using the MOTE package
+## See also https://www.aggieerin.com/shiny-server/tests/indtt.html
+
+# Creating programmatic condition names https://stackoverflow.com/questions/4350440/split-data-frame-string-column-into-multiple-columns
+
+group_names <- str_split_fixed(results$contrast, " - ", n = 2) %>% 
+  as_tibble() %>% 
+  rename(group_1 = V1, group_2 = V2) %>% 
+  slice_head()
+
+n1 <- n_by_cond %>% 
+  filter(condition == group_names$group_1) %>% 
+  dplyr::select(n) %>% 
+  deframe()
+
+n2 <- n_by_cond %>% 
+  filter(condition == group_names$group_2) %>% 
+  dplyr::select(n) %>% 
+  deframe()
+
+results_t_test <- d.ind.t.t(mi_avg_t_value, n1, n2, a = 0.05) # t value, n group 1, n group 2, alpha level
+
+t_test_result_tibble <- list(results_t_test) %>% 
+  flatten() %>% 
+  as_tibble()
+
+measure_contrast_info <- results %>% 
+  slice_head() %>% 
+  dplyr::select(measure, contrast)
+
+final_result <- t_test_result_tibble %>% 
+  bind_cols(measure_contrast_info) %>% 
+  relocate(measure, contrast, everything())
+
+return(final_result)
+
+}
+
+## The function works once!
+
+all_pairwise_contrasts %>% 
+  get_mi_results(measure_var = "bhs", contrast_var = "Placebo Control - Project ABC") %>%
+  print()
+
+```
+
+## All Results for All Models Aggregated Across All Imputations
+
+We see significant decreases in the expected directions across both active SSIs compared to the placebo for all confirmatory outcomes. Both active SSIs significantly decrease hopelessness, increase agency, and decrease depression symptoms compared to the placebo. 
+\n
+For exploratory outcomes, we fail to reject the null hypothesis that Project ABC decreases COVID trauma symptoms and generalized anxiety compared to the placebo. On the other hand, Project Personality significantly decreases COVID trauma symptoms and generalized anxiety compared to the placebo.
+\n
+We cannot reject the null hypotheses that Project ABC and Project Personality are equivalent at reducing hopelessness, depression, and COVID trauma symptoms. However, we fail to reject the null hypotheses that Project ABC and Project Personality are equivalent at increasing agency (confirmatory) and reducing generalized anxiety (exploratory). Project ABC appears to significantly increase agency more than Project Personality, while Project Personality seems to significantly reduce generalized anxiety more than Project ABC.  
+
+```{r mapping over all measures and potential contrasts while applying rubins rule, include = TRUE}
+
+## Create expanded grid of all combinations of measures and contrasts
+
+contrasts <- c("Placebo Control - Project ABC", "Placebo Control - Project Personality", "Project ABC - Project Personality")
+measures <- test_nest_by_measure_first$measure
+
+all_contrasts_measures <- expand_grid(contrasts, measures) %>% 
+  print()
+
+## Create a dataframe with all results across all measures and contrasts
+
+all_rubins_rule_results <- map2_dfr(all_contrasts_measures$measures, all_contrasts_measures$contrasts, ~{
+  
+  all_pairwise_contrasts %>% 
+  get_mi_results(measure_var = .x, contrast_var = .y)
+  
+}
+  ) %>% 
+  print()
+```
+
+```{r getting effect sizes for 3 month follow up bhs and shs}
+
+## In order to get this data, you have torun all of the cope_mcm_lm_tables_rmarkdown document to generate the necessary rds data 
+
+# reading in t values from bhs and shs 3 month
+
+bhs_shs_3_month_lms <- read_rds("agg_t_values_bhs_shs_3_months.rds") %>% 
+  mutate(term = case_when(
+    
+    str_detect(term, "predProject ABC") == T ~ "Placebo Control - Project ABC",
+    str_detect(term, "predProject Personality") == T ~ "Placebo Control - Project Personality",
+    TRUE ~ term
+    
+  )) %>% 
+  filter(str_detect(term, "Project")) %>% 
+  print()
+
+# Creating a function to get effect sizes from this output
+
+get_d_from_lm <- function(.data,measure_var,contrast_var){
+  
+  results <- .data %>% 
+  filter(str_detect(measure, measure_var) & str_detect(term, contrast_var))
+
+group_names <- str_split_fixed(results$term, " - ", n = 2) %>% 
+  as_tibble() %>% 
+  rename(group_1 = V1, group_2 = V2) %>% 
+  slice_head()
+
+n1 <- n_by_cond %>% 
+  filter(condition == group_names$group_1) %>% 
+  dplyr::select(n) %>% 
+  deframe()
+
+n2 <- n_by_cond %>% 
+  filter(condition == group_names$group_2) %>% 
+  dplyr::select(n) %>% 
+  deframe()
+
+results_t_test <- d.ind.t.t(results$t, n1, n2, a = 0.05) # t value, n group 1, n group 2, alpha level
+
+t_test_result_tibble <- list(results_t_test) %>% 
+  flatten() %>% 
+  as_tibble()
+
+measure_contrast_info <- results %>% 
+  slice_head() %>% 
+  dplyr::select(measure, term)
+
+final_result <- t_test_result_tibble %>% 
+  bind_cols(measure_contrast_info) %>% 
+  relocate(measure, term, everything())
+
+return(final_result)
+
+}
+
+bhs_shs_3_month_lms %>% 
+  get_d_from_lm(measure_var = "bhs", contrast_var = "Placebo Control - Project Personality")
+
+# Mapping over all combinations
+
+bhs_shs <- c("bhs","shs")
+
+all_3_month_bhs_shs <- expand_grid(bhs_shs, contrasts)
+
+rubins_rule_results_bhs_shs_3_months <- map2_dfr(all_3_month_bhs_shs$bhs_shs, all_3_month_bhs_shs$contrasts, ~{
+  
+  bhs_shs_3_month_lms %>% 
+  get_d_from_lm(measure_var = .x, contrast_var = .y)
+  
+}
+  ) %>% 
+  print()
+
+```
+
+## All Confirmatory P-Values That Were Signiificant Remain Significant After Correcting for Multiple Comparisons
+
+```{r adjust all p values across models, include = TRUE}
+
+## This looks like it might be a useful reference https://benwhalley.github.io/just-enough-r/multiple-comparisons.html#contrasts-examples
+
+corrected_p_values <- all_rubins_rule_results %>% 
+  filter(str_detect(measure, "bhs") | str_detect(measure, "shs") | str_detect(measure, "cdi")) %>% # Filtering down to only confirmatory results
+  mutate(p_adj = p.adjust(p, method = "fdr")) %>% 
+  dplyr::select(measure:t, p_adj) %>% 
+  print()
+
+```
+
+```{r getting results correcting for heteroskedasticity in bhs and shs models}
+
+# Changes in immediate post BHS and SHS have vild violations to homoskedasticity, so let's run those models in a way that's robust to that assumption
+
+## I used these resources:
+# https://www.r-econometrics.com/methods/hcrobusterrors/
+# https://data.princeton.edu/wws509/r/robust
+# Long & Ervin (2000) https://www.jstor.org/stable/2685594 (recommends "type HC3" for linear regression; this is essentially guiding what type of heteroskedasticity consistent covariance matrix we are using)
+
+
+robust_lms_bhs_shs <- lms_across_all_outcomes_and_imps %>% 
+  filter(str_detect(measure, "bhs") | str_detect(measure, "shs")) %>% 
+  mutate(robust_lm_obj = map(lm_obj, ~coeftest(.x, vcov = vcovHC(.x), type = "HC3")),
+         abc_results_by_imp = map(robust_lm_obj, ~{
+           tidy(.x) %>% 
+             filter(str_detect(term, "predProject ABC")) %>% 
+             dplyr::select(estimate,std.error)
+  }
+  ),
+        proj_pers_results_by_imp = map(robust_lm_obj, ~{
+           tidy(.x) %>% 
+             filter(str_detect(term, "predProject Personality")) %>% 
+             dplyr::select(estimate,std.error)
+  }
+  )
+  )
+
+```
+
+
+```{r applying rubins rule to all potential model combinations bhs and shs, include = FALSE}
+
+## Creating function to get Rubin's rule results once we have estimate and standard error
+
+# Do it once
+
+## Extracting estimate/standard error
+
+results_bhs <- robust_lms_bhs_shs %>% 
+  filter(str_detect(measure, "bhs")) %>% 
+  unnest(abc_results_by_imp) %>% 
+  ungroup() %>% 
+  dplyr::select(estimate, std.error) %>% 
+  print()
+
+mi_avg_est_bhs_robust <- mi.meld(as.matrix(results_bhs$estimate),  as.matrix(results_bhs$std.error), byrow = T) #coefficient and standard error
+
+# Calculating the t value by taking the esimate divided by the standard error
+mi_avg_t_value_bhs_robust <- mi_avg_est_bhs_robust$q.mi[1,1] / mi_avg_est_bhs_robust$se.mi[1,1]
+
+# Calculating d effect size with confidence intervals based on the t value using the MOTE package
+## See also https://www.aggieerin.com/shiny-server/tests/indtt.html
+# view(dfSummary(save_data$condition)) #checking n in each condition
+
+n_by_cond <- cope_imp %>% 
+  group_by(condition) %>% 
+  tally()
+
+n1 <- n_by_cond %>% 
+  filter(condition == "Placebo Control") %>% 
+  dplyr::select(n) %>% 
+  deframe()
+
+n2 <- n_by_cond %>% 
+  filter(condition == "Project ABC") %>% 
+  dplyr::select(n) %>% 
+  deframe()
+
+results_bhs_robust <- d.ind.t.t(mi_avg_t_value_bhs_robust, n1, n2, a = 0.05) # t value, n group 1, n group 2, alpha level
+results_bhs_robust
+
+## Now make a function
+
+get_mi_results_coef <- function(.data, measure_var, model_var, group_1, group_2){
+  
+  ## Extracting estimate/standard error
+
+results <- .data %>% 
+  filter(str_detect(measure, measure_var)) %>% 
+  unnest({{model_var}}) %>% 
+  ungroup() %>% 
+  dplyr::select(estimate, std.error) %>% 
+  print()
+
+mi_avg_est <- mi.meld(as.matrix(results$estimate),  as.matrix(results$std.error), byrow = T) #coefficient and standard error
+
+# Calculating the t value by taking the esimate divided by the standard error
+mi_avg_t_value <- mi_avg_est$q.mi[1,1] / mi_avg_est$se.mi[1,1]
+
+# Calculating d effect size with confidence intervals based on the t value using the MOTE package
+## See also https://www.aggieerin.com/shiny-server/tests/indtt.html
+# view(dfSummary(save_data$condition)) #checking n in each condition
+
+n_by_cond <- cope_imp %>% 
+  group_by(condition) %>% 
+  tally()
+
+n1 <- n_by_cond %>% 
+  filter(condition == {{group_1}}) %>% 
+  dplyr::select(n) %>% 
+  deframe()
+
+n2 <- n_by_cond %>% 
+  filter(condition == {{group_2}}) %>% 
+  dplyr::select(n) %>% 
+  deframe()
+
+results_t_test <- d.ind.t.t(mi_avg_t_value, n1, n2, a = 0.05) # t value, n group 1, n group 2, alpha level
+t_test_result_list <- list(results_t_test) %>% 
+  flatten() %>% 
+  as_tibble()
+
+return(t_test_result_list)
+}
+
+## The function works
+
+test_result <- robust_lms_bhs_shs %>% 
+  get_mi_results_coef(measure_var = "bhs", model_var = "abc_results_by_imp", group_1 = "Placebo Control" , group_2 = "Project ABC") %>%
+  flatten() %>% 
+  as_tibble() %>% 
+  print()
+
+## Now mapping over all potential model combinations (This will work if only comparing ABC and Project Personality to Placebo but not for comparing them to each other)
+
+measure_vars <- c("bhs", "shs")
+model_vars <- c("abc_results_by_imp", "proj_pers_results_by_imp")
+group_ones <- c("Placebo Control")
+group_twos <- c("Project Personality","Project ABC")
+
+initial_df_pmap <- expand_grid(measure_vars, model_vars, group_ones, group_twos) %>% 
+  filter(group_ones != group_twos) %>%
+  slice(1:2,5:6) %>% 
+  print()
+```
+
+## There Are Minimal Changes in Effect Sizes When We Run Models with Robust Standard Errors for BHS and SHS to Account for Potential Assumption Violations
+
+```{r applying rubins rule to all potential model combinations bhs and shs printing, include = TRUE}
+## Now have to pmap over everything
+
+tic()
+plan(multisession)
+robust_se_results <- future_pmap_dfr(list(initial_df_pmap$measure_vars, initial_df_pmap$model_vars, initial_df_pmap$group_ones, initial_df_pmap$group_twos), ~{
+  
+  yep <- robust_lms_bhs_shs %>%  
+  get_mi_results_coef(measure_var = ..1, model_var = .data[[..2]], group_1 = ..3 , group_2 = ..4) 
+  
+})
+toc()
+
+robust_se_results %>% 
+  bind_cols(initial_df_pmap) %>% 
+  relocate(measure_vars:group_twos, everything()) %>% 
+  print()
+
+```
+
+
+```{r looking at within group effect sizes across all models and measures}
+
+# Use it once
+
+within_group_effect_sizes <- long_imp_df_unnested %>% 
+  group_by(imp, measure, pred) %>% 
+  nest() %>% 
+  group_by(imp, measure, pred) %>% 
+  mutate(within_est_se = purrr::map(data,~{
+    
+  within_est_sd <- .x %>%
+   mutate(diff_score = out - baseline) %>%
+    dplyr::summarise(mean_diff_score = mean(diff_score), sd_diff_score = sd(diff_score)) %>%
+    dplyr::select(mean_diff_score, sd_diff_score)
+  
+  sample_size <- .x %>% 
+    tally()
+  
+  within_est_se <- within_est_sd %>% 
+    bind_cols(sample_size) %>% 
+    mutate(se_diff_score = sd_diff_score/ sqrt(n)) %>% 
+    dplyr::select(mean_diff_score, se_diff_score, n)
+  
+  }
+  ))
+
+within_group_effect_sizes %>% 
+  unnest(within_est_se) %>% 
+  ungroup()
+
+## Get a within-group effect size once
+
+only_var_and_group <- within_group_effect_sizes %>% 
+  unnest(within_est_se) %>% 
+  ungroup() %>% 
+  filter(str_detect(measure, "bhs"),str_detect(pred, "Project ABC")) %>% 
+  print()
+
+mi_avg_est_within_test <- mi.meld(as.matrix(only_var_and_group$mean_diff_score),  as.matrix(only_var_and_group$se_diff_score), byrow = T) #coefficient and standard error
+
+## Now let's calculate the t value by taking the esimate divided by the standard error
+
+mi_avg_t_value_within_test <- mi_avg_est_within_test$q.mi[1,1] / mi_avg_est_within_test$se.mi[1,1]
+
+## Calculating effect size
+
+sample_size <- only_var_and_group %>% 
+  dplyr::select(n) %>% 
+  slice_head() %>% 
+  deframe()
+
+d.dep.t.diff.t(mi_avg_t_value_within_test, sample_size, a = 0.05)
+
+## Write a function
+
+get_mi_within_results <- function(.data, measure_var, condition_var){
+  
+  ## Extracting estimate/standard error
+
+only_var_and_group <- within_group_effect_sizes %>% 
+  unnest(within_est_se) %>% 
+  ungroup() %>% 
+  filter(str_detect(measure, measure_var),str_detect(pred, condition_var))
+
+mi_avg_est_within_test <- mi.meld(as.matrix(only_var_and_group$mean_diff_score),  as.matrix(only_var_and_group$se_diff_score), byrow = T) #coefficient and standard error
+
+## Now let's calculate the t value by taking the esimate divided by the standard error
+
+mi_avg_t_value_within_test <- mi_avg_est_within_test$q.mi[1,1] / mi_avg_est_within_test$se.mi[1,1]
+
+## Calculating effect size
+
+sample_size <- only_var_and_group %>% 
+  dplyr::select(n) %>% 
+  slice_head() %>% 
+  deframe()
+
+results_t_test <- d.dep.t.diff.t(mi_avg_t_value_within_test, sample_size, a = 0.05)
+
+t_test_result_tibble <- list(results_t_test) %>% 
+  flatten() %>% 
+  as_tibble()
+
+measure_condition_info <- only_var_and_group %>% 
+  slice_head() %>% 
+  dplyr::select(measure, condition = pred)
+
+final_result <- t_test_result_tibble %>% 
+  bind_cols(measure_condition_info) %>% 
+  relocate(measure, condition, everything())
+
+return(final_result)
+
+}
+
+## The function works
+
+within_group_effect_sizes %>% 
+  get_mi_within_results(measure_var = "bhs", condition_var = "Project ABC")
+
+
+```
+## All Within-Group Effect Sizes are Medium - Large, Indicating the Interventions Outperformed Placebo Effects
+
+```{r mapping over all conditions and measures for within group effect sizes, include = TRUE}
+
+conditions <- c("Placebo Control", "Project ABC", "Project Personality")
+measures <- test_nest_by_measure_first$measure
+
+all_conditions_measures <- expand_grid(conditions, measures) %>% 
+  print()
+
+## Create a dataframe with all results across all measures and contrasts
+
+all_rubins_rule_results_within <- map2_dfr(all_conditions_measures$measures, all_conditions_measures$conditions, ~{
+  
+  within_group_effect_sizes %>% 
+  get_mi_within_results(measure_var = .x, condition_var = .y)
+  
+}
+  ) %>% 
+  print()
+
+
+```
+
+## Creating Table 2 With Average Imputed Means/SDs Across All Timepoints
+
+```{r getting average means and sds for the measures we already have}
+
+## Changing CDI to sum score in the original data frame first so it's sum score across all of these
+
+long_imp_df_cdi_sum <- long_imp_df %>% 
+  mutate(b_cdi_sum = b_cdi_mean *12,
+         f1_cdi_sum = f1_cdi_mean * 12)
+
+## Now creating a baseline version of this dataframe with CDI sum score instead of mean
+
+long_imp_df_b <- long_imp_df_cdi_sum %>% 
+  dplyr::select(imp, b_response_id, c(b_bhs_mean, b_shs_mean, b_cdi_sum, b_cts_rs, b_gad_mean, b_drs_mean)) %>% 
+  pivot_longer(
+    cols = where(is.numeric),
+    names_to = "measure",
+    values_to = "out" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+    mutate(measure = case_when(
+    
+    str_detect(measure, "bhs") == T ~ "bhs",
+    str_detect(measure, "shs") == T ~ "shs",
+    str_detect(measure, "cdi") == T ~ "cdi",
+    str_detect(measure, "cts") == T ~ "cts",
+    str_detect(measure, "gad") == T ~ "gad",
+    str_detect(measure, "drs") == T ~ "drs"
+    
+  )) %>%
+  print()
+
+long_imp_df_unnested_b <- long_imp_df_b %>% 
+  left_join(long_imp_df_condition_resized, by = c("imp", "b_response_id", "measure"))
+
+# Get a mean and standard deviation across 
+
+means_sds_b <- long_imp_df_unnested_b %>% 
+  group_by(imp, measure, pred) %>% 
+  nest() %>% 
+  group_by(imp, measure, pred) %>% 
+  mutate(mean_sd = purrr::map(data,~{
+    
+  yep <- .x %>%
+    dplyr::summarise(baseline_mean = mean(out), baseline_sd = sd(out))
+  }
+  )
+  ) %>% 
+  ungroup()
+
+## Get means/sds across measures and conditions (I should be able to get baseline to follow-up within-group effect sizes joined from tibble above)
+
+# Do it once
+
+means_sds_b %>% 
+  unnest(mean_sd) %>% 
+  filter(str_detect(measure, "cdi"),
+         pred == "Project ABC") %>%
+  dplyr::summarise(baseline_mean_imps = mean(baseline_mean), baseline_sd_imps = mean(baseline_sd)) %>% 
+  bind_cols(means_sds_b %>% 
+              mutate(measure_rows = if_else(str_detect(measure, "cdi") == T & pred == "Project ABC", 1, 0)) %>%
+              filter(measure_rows == 1) %>% 
+              slice_head() %>% 
+    dplyr::select(measure, pred)) %>% 
+  relocate(measure, pred, everything())
+
+# Write a function
+
+get_imp_descrip <- function(.data, measure_var, condition_var){
+  
+  mean_sd <- .data %>% 
+  unnest(mean_sd) %>% 
+  filter(str_detect(measure, measure_var),
+         pred == condition_var) %>%
+  dplyr::summarise(baseline_mean_imps = mean(baseline_mean), baseline_sd_imps = mean(baseline_sd))
+  
+  measure_cond <-.data %>% 
+    mutate(measure_rows = if_else(str_detect(measure, measure_var) == T & pred == condition_var, 1, 0)) %>%
+    filter(measure_rows == 1) %>% 
+    slice_head() %>% 
+    dplyr::select(measure, pred) 
+    
+  descrip <-  mean_sd %>% 
+    bind_cols(measure_cond) %>% 
+    relocate(measure, pred, everything())
+}
+
+means_sds_b %>% 
+  get_imp_descrip(measure_var = "bhs", condition_var = "Project ABC") %>% 
+  print()
+
+## Map over all combinations of measures and conditions
+
+all_mean_sds_b <- map2_dfr(all_conditions_measures$measures, all_conditions_measures$conditions, ~{
+  
+  means_sds_b %>% 
+  get_imp_descrip(measure_var = .x, condition_var = .y)
+  
+}
+  ) %>% 
+  print()
+
+```
+
+```{r reformatting our data to get immediate post intervention descriptives}
+
+## I think we need to make this long data frame even longer
+
+## Have to resize the condition datafrmae since it only contains one variable, while the other dataframes contain two Also need to add the correct format of measure vars
+
+long_imp_df_condition_resized_pi <- long_imp_df_condition %>% 
+  bind_rows(long_imp_df_condition_extra) %>% 
+  arrange(imp, b_response_id) %>%
+  mutate(measure = c(rep(c("bhs","shs"),58406))) %>% 
+  print()
+    
+class(long_imp_df_condition_resized)
+
+long_imp_df_pi <- long_imp_df %>% 
+  dplyr::select(imp, b_response_id, c(pi_bhs_mean, pi_shs_mean)) %>% 
+  pivot_longer(
+    cols = is.numeric,
+    names_to = "measure",
+    values_to = "out" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+    mutate(measure = case_when(
+    
+    str_detect(measure, "bhs") == T ~ "bhs",
+    str_detect(measure, "shs") == T ~ "shs",
+    str_detect(measure, "cdi") == T ~ "cdi",
+    str_detect(measure, "cts") == T ~ "cts",
+    str_detect(measure, "gad") == T ~ "gad",
+    
+  )) %>%
+  print()
+
+## Creating a post-intervention only dataframe
+
+long_imp_df_unnested_pi <- long_imp_df_pi %>% 
+  left_join(long_imp_df_condition_resized_pi, by = c("imp", "b_response_id", "measure")) %>% 
+  dplyr::select(-b_response_id) %>% 
+  relocate(imp, measure, pred, out)
+
+## Creating the necessay metrics to average across imputations
+
+means_sds_pi <- long_imp_df_unnested_pi %>% 
+  group_by(imp, measure, pred) %>% 
+  nest() %>% 
+  group_by(imp, measure, pred) %>% 
+  mutate(mean_sd = purrr::map(data,~{
+    
+  yep <- .x %>%
+    dplyr::summarise(out_mean = mean(out), out_sd = sd(out))
+  }
+  )
+  ) %>% 
+  ungroup()
+
+## Tweaking function due to naming
+
+get_imp_descrip_pi <- function(.data, measure_var, condition_var){
+  
+  mean_sd <- .data %>% 
+  unnest(mean_sd) %>% 
+  filter(str_detect(measure, measure_var),
+         pred == condition_var) %>%
+  dplyr::summarise(post_intevention_mean_imps = mean(out_mean), post_inteventio_sd_imps = mean(out_sd))
+  
+  measure_cond <-.data %>% 
+    mutate(measure_rows = if_else(str_detect(measure, measure_var) == T & pred == condition_var, 1, 0)) %>%
+    filter(measure_rows == 1) %>% 
+    slice_head() %>% 
+    dplyr::select(measure, pred) 
+    
+  descrip <-  mean_sd %>% 
+    bind_cols(measure_cond) %>% 
+    relocate(measure, pred, everything())
+}
+
+means_sds_pi %>% 
+  get_imp_descrip_pi(measure_var = "bhs", condition_var = "Project ABC") %>% 
+  print()
+
+## Mapping over all combinations
+
+all_mean_sds_pi <- map2_dfr(all_conditions_measures$measures, all_conditions_measures$conditions, ~{
+  
+  means_sds_pi %>% 
+  get_imp_descrip_pi(measure_var = .x, condition_var = .y)
+  
+}
+  ) %>% 
+  print()
+
+## What would putting these together look like? Ok, this looks alright. Now have to do this for follow-up in the next chunk
+
+all_mean_sds_b %>% 
+  left_join(all_mean_sds_pi, by = c("measure","pred"))
+
+
+```
+
+
+```{r creating descriptives for follow up}
+
+long_imp_df_f1 <- long_imp_df_cdi_sum %>% 
+  dplyr::select(imp, b_response_id, c(f1_bhs_mean, f1_shs_mean, f1_cdi_sum, f1_cts_rs, f1_gad_mean, f1_drs_mean)) %>% 
+  pivot_longer(
+    cols = is.numeric,
+    names_to = "measure",
+    values_to = "out" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+    mutate(measure = case_when(
+    
+    str_detect(measure, "bhs") == T ~ "bhs",
+    str_detect(measure, "shs") == T ~ "shs",
+    str_detect(measure, "cdi") == T ~ "cdi",
+    str_detect(measure, "cts") == T ~ "cts",
+    str_detect(measure, "gad") == T ~ "gad",
+    str_detect(measure, "drs") == T ~ "drs"
+    
+  )) %>%
+  print()
+
+long_imp_df_unnested_f1 <- long_imp_df_f1 %>% 
+  left_join(long_imp_df_condition_resized, by = c("imp", "b_response_id", "measure"))
+
+means_sds_f1 <- long_imp_df_unnested_f1 %>% 
+  group_by(imp, measure, pred) %>% 
+  nest() %>% 
+  group_by(imp, measure, pred) %>% 
+  mutate(mean_sd = purrr::map(data,~{
+    
+  yep <- .x %>%
+    dplyr::summarise(out_mean = mean(out), out_sd = sd(out))
+  }
+  )
+  ) %>% 
+  ungroup()
+
+get_imp_descrip_fu <- function(.data, measure_var, condition_var){
+  
+  mean_sd <- .data %>% 
+  unnest(mean_sd) %>% 
+  filter(str_detect(measure, measure_var),
+         pred == condition_var) %>%
+  dplyr::summarise(f1_mean_imps = mean(out_mean), f1_sd_imps = mean(out_sd))
+  
+  measure_cond <-.data %>% 
+    mutate(measure_rows = if_else(str_detect(measure, measure_var) == T & pred == condition_var, 1, 0)) %>%
+    filter(measure_rows == 1) %>% 
+    slice_head() %>% 
+    dplyr::select(measure, pred) 
+    
+  descrip <-  mean_sd %>% 
+    bind_cols(measure_cond) %>% 
+    relocate(measure, pred, everything())
+}
+
+means_sds_f1 %>% 
+  get_imp_descrip_fu(measure_var = "cdi", condition_var = "Project ABC") %>% 
+  print()
+
+## Map over all combinations
+
+all_mean_sds_f1 <- map2_dfr(all_conditions_measures$measures, all_conditions_measures$conditions, ~{
+  
+  means_sds_f1 %>% 
+  get_imp_descrip_fu(measure_var = .x, condition_var = .y)
+  
+}
+  ) %>% 
+  print()
+
+## Join together all descriptives
+
+all_descriptives_imps <- all_mean_sds_b %>% 
+  left_join(all_mean_sds_pi, by = c("measure","pred")) %>% 
+  left_join(all_mean_sds_f1, by = c("measure","pred"))
+
+```
+
+```{r turning these descriptives into a table}
+
+## GT can't align on decimals and can't output to Word (unlike gtsummary, which can convert to flextable and then output to Word) so not useful here
+
+# gt_table2 <- all_descriptives_imps %>% 
+#   group_by(pred) %>% 
+#   mutate(across(where(is.numeric), ~format(round(.x, 2), nsmall = 2)), # Used this solution to always get 2 decimal places https://stackoverflow.com/questions/3443687/formatting-decimal-places-in-r
+#         `Baseline M(SD)` = glue("{baseline_mean_imps} ({baseline_sd_imps})", .na = "NA"),
+#         `Post Intervention M(SD)` = glue("{post_intevention_mean_imps} ({post_inteventio_sd_imps})", .na = "NA"),
+#         `3 Month Follow Up M(SD)` = glue("{f1_mean_imps} ({f1_sd_imps})", .na = "NA"),
+#         across(everything(), ~ifelse(str_detect(.x, "(NA)") == TRUE, " ",.x))) %>% 
+#   dplyr::select(-c(baseline_mean_imps:f1_sd_imps)) %>% 
+#   mutate(measure = case_when(
+#     
+#     str_detect(measure, "bhs") ~ "Beck's Hopelessness Scale",
+#     str_detect(measure, "shs") ~ "State Hope Scale",
+#     str_detect(measure, "cdi") ~ "Children's Depression Inventory-Short Form",
+#     str_detect(measure, "cts") ~ "COVID Trauma Symptoms",
+#     str_detect(measure, "gad") ~ "Generalized Anxiety Disorder-7",
+#     
+#   )) %>% 
+#   rename(`Measure by Treament Assignment` = measure) %>% 
+#   gt() %>% 
+#   cols_align(columns = 2:4, "center")
+
+## Luckily it looks like since I can do a lot of the work with glue strings I can create a flextable that outputs to word that looks good overall
+
+flex_table2 <- all_descriptives_imps %>% 
+  group_by(pred) %>% 
+  mutate(across(where(is.numeric), ~format(round(.x, 2), nsmall = 2)), # Used this solution to always get 2 decimal places https://stackoverflow.com/questions/3443687/formatting-decimal-places-in-r
+        `Baseline M(SD)` = glue("{baseline_mean_imps} ({baseline_sd_imps})", .na = "NA"),
+        `Post Intervention M(SD)` = glue("{post_intevention_mean_imps} ({post_inteventio_sd_imps})", .na = "NA"),
+        `3 Month Follow Up M(SD)` = glue("{f1_mean_imps} ({f1_sd_imps})", .na = "NA"),
+        across(everything(), ~ifelse(str_detect(.x, "(NA)") == TRUE, " ",.x))) %>% 
+  dplyr::select(-c(baseline_mean_imps:f1_sd_imps)) %>% 
+  mutate(measure = case_when(
+    
+    str_detect(measure, "bhs") ~ "Beck's Hopelessness Scale",
+    str_detect(measure, "shs") ~ "State Hope Scale",
+    str_detect(measure, "cdi") ~ "Children's Depression Inventory-Short Form",
+    str_detect(measure, "cts") ~ "COVID Trauma Symptoms",
+    str_detect(measure, "gad") ~ "Generalized Anxiety Disorder-7",
+    str_detect(measure, "drs") ~ "Dietary Restriction Screener"
+    
+  )) %>% 
+  rename(`Outcome by Treatment Assignment` = measure) %>% 
+  as_grouped_data(groups = "pred") %>% 
+  as_flextable(hide_grouplabel = TRUE) %>% 
+  bold(i = c(1,8,15),j=1) %>% 
+  autofit()
+
+flex_table2
+
+save_as_docx("cope_table_2_word" = flex_table2, path = "cope_table_2_word.docx")
+
+```
+
+## Visualization of Primary Outcome
+
+```{r organizing data for creating cool visualization for primary outcome}
+
+## Note: This figure will only reproduce if you have R 4.0.3 or greater
+
+## Trying to get the correct info that's aggregated across imputations
+
+# Do it once
+
+means_sds_f1 %>% 
+  filter(str_detect(measure, "cdi"), pred == "Project ABC") %>% 
+  unnest(data) %>% 
+  group_by(imp, b_response_id) %>% 
+  summarise(mean_across_imps = mean(out)) %>% 
+  ungroup() %>% 
+  dplyr::select(-imp) %>% 
+  distinct(b_response_id, .keep_all = TRUE)
+
+# Write a function
+
+get_outcome_by_person <- function(.data, measure_var, condition_var){
+  
+  .data %>% 
+  filter(str_detect(measure, measure_var), pred == condition_var) %>% 
+  unnest(data) %>% 
+  group_by(imp, b_response_id) %>% 
+  summarise(mean_across_imps = mean(out)) %>% 
+  ungroup() %>% 
+  dplyr::select(-imp) %>% 
+  distinct(b_response_id, .keep_all = TRUE) %>% 
+  mutate(pred = factor(condition_var))
+  
+}
+
+means_sds_f1 %>% 
+  get_outcome_by_person(measure_var = "cdi", condition_var = "Project ABC")
+
+# Map across that for both baseline and follow up dataframes separately
+
+cdi_var <- "cdi"
+conditions
+
+cdi_conditions <- expand_grid(cdi_var, conditions)
+
+all_cdi_b <- map2_dfr(cdi_conditions$cdi_var, cdi_conditions$conditions, ~{
+  
+  means_sds_b %>% 
+  get_outcome_by_person(measure_var = .x, condition_var = .y)
+  
+}
+  ) %>% 
+  print()
+
+all_cdi_f1 <- map2_dfr(cdi_conditions$cdi_var, cdi_conditions$conditions, ~{
+  
+  means_sds_f1 %>% 
+  get_outcome_by_person(measure_var = .x, condition_var = .y)
+  
+}
+  ) %>% 
+  print()
+
+## Joining data together
+
+all_cdi_both_times <- all_cdi_b %>% 
+  left_join(all_cdi_f1, by = c("b_response_id","pred")) %>% 
+  rename(b_cdi_sum = mean_across_imps.x, f1_cdi_sum = mean_across_imps.y) %>% 
+  relocate(b_response_id, pred, b_cdi_sum, f1_cdi_sum) %>% 
+  print()
+
+```
+
+```{r plotting a pre post raincloud plot}
+## I'm thinking a pre-post raincloud plot here, where the facet is the contrast (ABC vs. Placebo, Project Personality vs. Placebo, and ABC vs. Project Personality)
+
+# I think I can do this multiple times via function, but let's try doing it just once to start https://github.com/jorvlan/raincloudplots
+
+pre_abc <- all_cdi_both_times %>% 
+  filter(pred == "Project ABC") %>% 
+  dplyr::select(b_cdi_sum) %>% 
+  mutate(b_cdi_sum = ifelse(b_cdi_sum < 0, 0, b_cdi_sum)) %>% 
+  deframe()
+
+post_abc <- all_cdi_both_times %>% 
+  filter(pred == "Project ABC") %>% 
+  dplyr::select(f1_cdi_sum) %>% 
+  mutate(b_cdi_sum = ifelse(f1_cdi_sum < 0, 0, f1_cdi_sum)) %>% 
+  deframe()
+
+pre_placebo <- all_cdi_both_times %>% 
+  filter(pred == "Placebo Control") %>% 
+  dplyr::select(b_cdi_sum) %>% 
+  mutate(b_cdi_sum = ifelse(b_cdi_sum < 0, 0, b_cdi_sum)) %>% 
+  deframe()
+
+post_placebo <- all_cdi_both_times %>% 
+  filter(pred == "Placebo Control") %>% 
+  dplyr::select(f1_cdi_sum) %>% 
+  mutate(b_cdi_sum = ifelse(f1_cdi_sum < 0, 0, f1_cdi_sum)) %>% 
+  deframe()
+
+df_2x2_abc_plac <- data_2x2(
+  array_1 = pre_abc,
+  array_2 = pre_placebo,
+  array_3 = post_abc,
+  array_4 = post_placebo,
+  labels = (c('Project ABC','Placebo')),
+  jit_distance = .2,
+  jit_seed = 33,
+  spread_x_ticks = FALSE) 
+
+raincloud_2x2_abc_plac <- raincloud_2x2_repmes(
+  data = df_2x2_abc_plac,
+  colors = (c('darkorange', '#0072B2', 'darkorange', '#0072B2')),
+  fills = (c('darkorange', '#0072B2',  'darkorange', '#0072B2')),
+  size = 1,
+  alpha = .1,
+  spread_x_ticks = FALSE) +
+scale_x_continuous(breaks=c(1,2), labels=c("Baseline", "3 Month Follow Up"), limits=c(0, 3)) +
+  xlab("Project ABC (Orange) vs. Placebo (Blue)") + 
+  ylab("CDI-SF Sum Score") +
+  theme_classic()
+
+raincloud_2x2_abc_plac
+
+ggsave("raincloud_plot_abc_plac.pdf", raincloud_2x2_abc_plac)
+
+## Thought of writing a function but raincloudplot doesn't seem to play nice with that given the difficulty of adding a legend. I'll create them by hand and put them together using patchwork
+
+pre_pp <- all_cdi_both_times %>% 
+  filter(pred == "Project Personality") %>% 
+  dplyr::select(b_cdi_sum) %>% 
+  mutate(b_cdi_sum = ifelse(b_cdi_sum < 0, 0, b_cdi_sum)) %>% 
+  deframe()
+
+post_pp <- all_cdi_both_times %>% 
+  filter(pred == "Project Personality") %>% 
+  dplyr::select(f1_cdi_sum) %>% 
+  mutate(b_cdi_sum = ifelse(f1_cdi_sum < 0, 0, f1_cdi_sum)) %>% 
+  deframe()
+
+df_2x2_pp_plac <- data_2x2(
+  array_1 = pre_pp,
+  array_2 = pre_placebo,
+  array_3 = post_pp,
+  array_4 = post_placebo,
+  labels = (c('Project Personality','Placebo')),
+  jit_distance = .2,
+  jit_seed = 33,
+  spread_x_ticks = FALSE) 
+
+raincloud_2x2_pp_plac <- raincloud_2x2_repmes(
+  data = df_2x2_pp_plac,
+  colors = (c('darkorange', '#0072B2', 'darkorange', '#0072B2')),
+  fills = (c('darkorange', '#0072B2',  'darkorange', '#0072B2')),
+  size = 1,
+  alpha = .1,
+  spread_x_ticks = FALSE) +
+scale_x_continuous(breaks=c(1,2), labels=c("Baseline", "3 Month Follow Up"), limits=c(0, 3)) +
+  xlab("Project Personality (Orange) vs. Placebo (Blue)") + 
+  ylab("CDI-SF Sum Score") +
+  theme_classic()
+
+raincloud_2x2_pp_plac
+
+ggsave("raincloud_plot_pp_plac.pdf", raincloud_2x2_pp_plac)
+
+## Now Project ABC vs. Project Personality
+
+df_2x2_abc_pp <- data_2x2(
+  array_1 = pre_abc,
+  array_2 = pre_pp,
+  array_3 = post_abc,
+  array_4 = post_pp,
+  labels = (c('Project ABC','Project Personality')),
+  jit_distance = .2,
+  jit_seed = 33,
+  spread_x_ticks = FALSE) 
+
+raincloud_2x2_abc_pp <- raincloud_2x2_repmes(
+  data = df_2x2_abc_pp,
+  colors = (c('darkorange', '#0072B2', 'darkorange', '#0072B2')),
+  fills = (c('darkorange', '#0072B2',  'darkorange', '#0072B2')),
+  size = 1,
+  alpha = .1,
+  spread_x_ticks = FALSE) +
+scale_x_continuous(breaks=c(1,2), labels=c("Baseline", "3 Month Follow Up"), limits=c(0, 3)) +
+  xlab("Project ABC (Orange) vs. Project Personality (Blue)") + 
+  ylab("CDI-SF Sum Score") +
+  theme_classic()
+
+raincloud_2x2_abc_pp
+
+ggsave("raincloud_plot_abc_pp.pdf", raincloud_2x2_abc_pp)
+
+## Creating plot with patchwork (With spacing)
+
+ex_1 <-raincloud_2x2_abc_plac + plot_spacer() + raincloud_2x2_pp_plac + plot_spacer() + raincloud_2x2_abc_pp
+
+## Saving the patchwork plot
+
+ggsave("example_raincloud_plot_1.pdf", ex_1)
+
+## Creating plot with patchwork (With spacing)
+
+ex_2 <- raincloud_2x2_abc_plac + raincloud_2x2_pp_plac + raincloud_2x2_abc_pp
+
+## Saving the patchwork plot
+
+ggsave("example_raincloud_plot_2.pdf", ex_2)
+
+```
+
+## Doing Imputation Only for People Who Completed the Interventions
+
+```{r}
+
+## Getting percent missing across all outcomes in this dataset
+
+percent_missing_all_imputed_variables <- map(names_imputed_variables, ~{
+  
+  cope_imp_fu %>% 
+    calculate_percent_missing(.data[[.x]])
+  
+}) %>% 
+  print()
+
+```
+
+
+```{r imputing data and visualizing results of imputatio, include = TRUE}
+               
+# Running the multiple imputation model
+# Note, we're matching m to match the % of missing data in our outcome variables rounding up
+set.seed(33)
+cope_out <- amelia(cope_imp_fu, m = 29, noms = c("condition"), idvars = "b_response_id")
+
+# Creating diagnostic plots
+compare.density(cope_out, var = "f1_cdi_mean")
+
+overimpute(cope_out, var = "f1_cdi_mean")
+
+```
+
+```{r creating long format tibble of amelia imputations object to make many models possible}
+
+## Creating long data of Amelia imputations object that we can use to nest each imputation and map functions over each imputation
+
+imp_df <- as.data.frame(cope_out$imputations)
+
+long_imp_df_vars <- imp_df %>% 
+  pivot_longer(
+    cols = everything(),
+    names_to = c("imp",".value"),
+    names_pattern = "([[:alnum:]]+)\\.([[:alnum:]]+[[:punct:]]+[[:alnum:]]+[[:punct:]]+[[:alnum:]]+)" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+  filter(!is.na(imp)) %>% 
+  print()
+
+## Need to a separate pivot for the condition variable since it's differently structured (Probably not necessary but it's the way I can make it work for now)
+
+long_imp_df_condition <- imp_df %>% 
+  dplyr::select(contains("condition")) %>% 
+  pivot_longer(
+    cols = everything(),
+    names_to = c("imp",".value"),
+    names_pattern = "([[:alnum:]]+)\\.([[:alnum:]])" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+  filter(!is.na(imp)) %>% 
+  rename(condition = c) %>% 
+  print()
+
+long_imp_df <- long_imp_df_vars %>% 
+  bind_cols(long_imp_df_condition %>% dplyr::select(condition)) %>% 
+  print()
+
+## Running the assumption checks on each imputation for one set of variables
+```
+
+```{r mapping this many models pipeline across many variables in toy data}
+
+## This answer looks promising... https://stackoverflow.com/questions/56689304/can-map-take-functions-with-multiple-inputs
+
+## Doing it with toy data first
+
+df <- data.frame(
+  out = sample(c(1:10),40,replace=TRUE),
+  pre = sample(c(1:30),40,replace = TRUE),
+  var1 = sample(c(1:20),40,replace = TRUE),
+  var2 = sample(c(1:50),40,replace = TRUE),
+  group = c(rep(1, 20),rep(2, 20)),
+  name = c(rep(c("bhs", "cdi"), 20))
+)
+
+# Creating nested data frame, nesting by group (think imputation)
+
+df_by_group<-df%>%
+  group_by(group)%>%
+  nest()
+
+# This formula style function lets us pass in the variable names in a way that lets the function work
+
+input_fun<-function(.data, outcome, predictor, covariate){
+  
+  lm_dat <- .data
+  
+  lm(as.formula(paste(outcome,"~",predictor,"+",paste(covariate,collapse = "+"))),data=lm_dat)
+}
+
+input_fun(.data = df, outcome="out",predictor="pre",covariate=c("var1"))
+
+safely_input_fun <- safely(input_fun)
+
+models <- df_by_group %>%
+  mutate(mod = purrr::map(data, ~input_fun(.data = ., outcome="out",predictor="pre",covariate=c("var1"))),
+         tidied = map(mod, tidy),
+         glances = map(mod, broom::glance),
+         homoskedasticity = walk(mod, ~{
+           
+           fitted <- .x$fitted.values
+           residuals <- .x$residuals
+           plot(fitted,residuals)
+           
+         })) %>% 
+  print()
+
+## Getting all models
+
+models %>% 
+  unnest(tidied) %>% 
+  print()
+
+## And there general stats
+
+models %>% 
+  unnest(glances) %>% 
+  print()
+  
+
+```
+
+```{r reformatting our data to match the toy data}
+
+
+## I think we need to make this long data frame even longer. In order to run many models all at once, we need all the condition variables in one column, all the baseline covariate values in one column, and all the outcomes in one column. Since we're doing 5 different models, we'll need a dataframe 5x as long as the current one to contain all of the rows necessary to do that. This dataframe can be created naturally for the baseline covariate and the outcome (since we have to pivot 5 variables longer and so the dataframe will naturally get five times as large). For condition, since we're only pivoting one variable this natural expansion won't happen via the pivot, so we have to duplicate the condition dataframe 4 times and add it to the original, giving us the same sized dataframe as the baseline and outcome.
+
+# Want to put together all outcomes, condition values, and baseline values while also creating a name column based on which model we're looking at 
+
+long_imp_df_baseline <- long_imp_df %>% 
+  dplyr::select(imp, b_response_id, c(b_bhs_mean, b_shs_mean, b_cdi_mean, b_cts_rs, b_gad_mean)) %>% 
+  pivot_longer(
+    cols = where(is.numeric),
+    names_to = "measure",
+    values_to = "baseline" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+  mutate(measure = case_when(
+    
+    str_detect(measure, "bhs") == T ~ "bhs",
+    str_detect(measure, "shs") == T ~ "shs",
+    str_detect(measure, "cdi") == T ~ "cdi",
+    str_detect(measure, "cts") == T ~ "cts",
+    str_detect(measure, "gad") == T ~ "gad",
+    
+  )) %>%
+  print()
+
+long_imp_df_condition <- long_imp_df %>% 
+  dplyr::select(imp, b_response_id, condition) %>% 
+  pivot_longer(
+    cols = condition,
+    names_to = "measure",
+    values_to = "pred" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+  print()
+
+long_imp_df_condition_extra <- long_imp_df_condition
+
+## Have to resize the condition datafrmae since it only contains one variable, while the other dataframes contain five. Also need to add the correct format of measure vars
+
+long_imp_df_condition_resized <- long_imp_df_condition %>% 
+  bind_rows(long_imp_df_condition_extra) %>% 
+  bind_rows(long_imp_df_condition_extra) %>% 
+  bind_rows(long_imp_df_condition_extra) %>%
+  bind_rows(long_imp_df_condition_extra) %>%
+  arrange(imp, b_response_id) %>%
+  mutate(measure = c(rep(c("bhs","shs","cdi","cts","gad"),58406))) %>% 
+  print()
+    
+class(long_imp_df_condition_resized)
+
+long_imp_df_outcome <- long_imp_df %>% 
+  dplyr::select(imp, b_response_id, c(pi_bhs_mean, pi_shs_mean, f1_cdi_mean, f1_cts_rs, f1_gad_mean)) %>% 
+  pivot_longer(
+    cols = where(is.numeric),
+    names_to = "measure",
+    values_to = "out" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+    mutate(measure = case_when(
+    
+    str_detect(measure, "bhs") == T ~ "bhs",
+    str_detect(measure, "shs") == T ~ "shs",
+    str_detect(measure, "cdi") == T ~ "cdi",
+    str_detect(measure, "cts") == T ~ "cts",
+    str_detect(measure, "gad") == T ~ "gad",
+    
+  )) %>%
+  print()
+
+# Let's make sure the measures are in the same order across all of the datasets
+
+all(long_imp_df_condition_resized$measure == long_imp_df_baseline$measure)
+all(long_imp_df_condition_resized$measure == long_imp_df_outcome$measure)
+all(long_imp_df_baseline$measure == long_imp_df_outcome$measure)
+
+```
+
+```{r nesting by measure first seems to work}
+
+## Binding these extra long dataframes together
+
+long_imp_df_unnested_initial <- long_imp_df_baseline %>% 
+  left_join(long_imp_df_condition_resized, by = c("imp", "b_response_id", "measure")) %>% 
+  left_join(long_imp_df_outcome, by = c("imp", "b_response_id", "measure"))  %>%
+  relocate(imp, measure, pred, baseline, out)
+
+## Let's do a spot check at random to make sure the correct values of different variables are ending up in the right places (Made sure to select a participant who had missing data at post-intervention and follow-up so the numbers would be different across imputations)
+
+test_bhs_response_long <- long_imp_df %>% 
+  filter(str_detect(imp, "imp10") & str_detect(b_response_id, "R_r3FCy97x6xoH1yF")) %>% 
+  dplyr::select(pi_bhs_mean) %>% 
+  deframe() %>% 
+  print()
+  
+test_bhs_response_longer <- long_imp_df_unnested_initial %>% 
+  filter(str_detect(imp, "imp10") & str_detect(b_response_id, "R_r3FCy97x6xoH1yF") & str_detect(measure, "bhs")) %>% 
+  dplyr::select(out) %>% 
+  deframe() %>% 
+  print()
+
+## And they're the same! This spot check indicates the data has been pivoted in a way that works
+
+test_bhs_response_long == test_bhs_response_longer
+
+## Now removing response id so we can do the many models setup
+
+long_imp_df_unnested <- long_imp_df_unnested_initial %>% 
+  dplyr::select(-b_response_id)
+
+## Nesting by measure
+
+test_nest_by_measure_first <- long_imp_df_unnested %>% 
+  group_by(measure) %>%
+  nest()
+
+## Then splitting by imputation and applying the function
+
+# Do it once
+
+long_imp_df_unnested %>% 
+  dplyr::select(-measure) %>% 
+  group_split(imp) %>% 
+  purrr::map(~input_fun(.data = .x, outcome="out",predictor="pred",covariate=c("baseline")))
+  
+## Now do it by funciton
+
+splitting_by_imp <- test_nest_by_measure_first %>% 
+  mutate(split_by_imp = purrr::map(data,~{
+    
+    new_data <- .x %>% 
+      group_split(imp) %>% 
+      purrr::map(~input_fun(.data = .x, outcome="out",predictor="pred",covariate=c("baseline")))
+      
+  }))
+
+## Unnest so we have access to all the models across all imputations for all outcomes
+
+lms_across_all_outcomes_and_imps <- splitting_by_imp %>% 
+  unnest(split_by_imp) %>% 
+  rename(lm_obj = split_by_imp)
+
+```
+
+```{r now lets look at assumptions by model}
+
+## Do it once
+
+lms_across_all_outcomes_and_imps %>% 
+  filter(str_detect(measure, "bhs")) %>% 
+  mutate(
+         homoskedasticity = map(lm_obj, ~{
+           
+           fitted <- .x$fitted.values
+           residuals <- .x$residuals
+           plot(fitted,residuals)
+           
+         }),
+         normality_qqplot = map(lm_obj, ~{
+           
+           qqnorm(.x$residuals)
+           qqline(.x$residuals)
+           
+         }),
+         normality_hist = map(lm_obj, ~{
+           
+           hist(.x$residuals, xlim=c(-4,4), breaks=10)
+           
+         }),
+         collinearity_vif = map(lm_obj, ~{
+           
+           car::vif(.x)
+           
+         }),
+         outlier_cooksdist <- map(lm_obj, ~{
+           
+           cook <- cooks.distance(.x)
+           plot(cook, ylab="Cook's distances")
+           
+         })
+         ) %>% 
+  print()
+
+## Now write a function
+
+check_lm_assumptions <- function(.data, measure_var){
+  
+  .data %>% 
+  filter(str_detect(measure, measure_var)) %>% 
+  mutate(
+         homoskedasticity = map(lm_obj, ~{
+           
+           fitted <- .x$fitted.values
+           residuals <- .x$residuals
+           plot(fitted,residuals)
+           
+         }),
+         normality_qqplot = map(lm_obj, ~{
+           
+           qqnorm(.x$residuals)
+           qqline(.x$residuals)
+           
+         }),
+         normality_hist = map(lm_obj, ~{
+           
+           hist(.x$residuals, xlim=c(-4,4), breaks=10)
+           
+         }),
+         collinearity_vif = map(lm_obj, ~{
+           
+           car::vif(.x)
+           
+         }),
+         outlier_cooksdist <- map(lm_obj, ~{
+           
+           cook <- cooks.distance(.x)
+           plot(cook, ylab="Cook's distances")
+           
+         })
+         ) %>% 
+  print()
+  
+}
+
+lms_across_all_outcomes_and_imps %>% 
+  check_lm_assumptions(measure_var = "bhs")
+
+```
+
+## Assumptions for Linear Regression are Generally Met Across All Models (With the Potential Exceptions of Homoskedasticity in BHS and SHS Models)
+
+```{r mapping over all models to look at assumptions, include = TRUE}
+
+## Now map across all variables
+
+all_assumption_checks <- map(test_nest_by_measure_first$measure, ~{
+  
+  lms_across_all_outcomes_and_imps %>% 
+  check_lm_assumptions(measure_var = .x)
+  
+})
+
+```
+
+```{r creating pairwise contrasts for all models}
+
+## Creating pairwise comparisons for all models https://stackoverflow.com/questions/65347058/emmeans-for-a-gls-model-doesnt-run-inside-map and https://cran.r-project.org/web/packages/emmeans/vignettes/comparisons.html
+
+all_pairwise_contrasts <- lms_across_all_outcomes_and_imps %>% 
+  mutate(contrast_means = map2(data, lm_obj, ~emmeans::emmeans(.y,"pred",data=.x)),
+         pairwise_contrasts = map(contrast_means, contrast, "pairwise", adjust = "none"), # Will be adjusting the p-values later (Want to go across all models)
+         tidied_contrasts = map(pairwise_contrasts, tidy),
+         tidied_lms = map(lm_obj, tidy))
+
+```
+
+
+```{r getting results from pairwise contrasts once and creating function}
+
+# Do it once
+
+## Extracting estimate/standard error
+
+results_bhs <- all_pairwise_contrasts %>% 
+  filter(str_detect(measure, "bhs")) %>% 
+  unnest(tidied_contrasts) %>% 
+  ungroup() %>% 
+  dplyr::select(measure, contrast, estimate, std.error) %>% 
+  filter(str_detect(contrast, "Placebo Control - Project ABC")) %>% 
+  print()
+
+## Getting the names for each group
+
+group_names <- str_split_fixed(results_bhs$contrast, " - ", n = 2) %>% 
+  as_tibble() %>% 
+  rename(group_1 = V1, group_2 = V2) %>% 
+  slice_head() %>% 
+  print()
+
+## Demonstrating we can programmatically create the sample size by group (Important for t test later)
+
+n_by_cond <- cope_imp %>% 
+  group_by(condition) %>% 
+  tally() %>% 
+  print()
+
+n1 <- n_by_cond %>% 
+  filter(condition == group_names$group_1) %>% 
+  dplyr::select(n) %>% 
+  deframe() %>% 
+  print()
+
+mi_avg_est_bhs_robust <- mi.meld(as.matrix(results_bhs$estimate),  as.matrix(results_bhs$std.error), byrow = T) #coefficient and standard error
+
+# Calculating the t value by taking the esimate divided by the standard error
+mi_avg_t_value_bhs_robust <- mi_avg_est_bhs_robust$q.mi[1,1] / mi_avg_est_bhs_robust$se.mi[1,1]
+
+# Calculating d effect size with confidence intervals based on the t value using the MOTE package
+## See also https://www.aggieerin.com/shiny-server/tests/indtt.html
+# view(dfSummary(save_data$condition)) #checking n in each condition
+
+n_by_cond <- cope_imp %>% 
+  group_by(condition) %>% 
+  tally()
+
+n1 <- n_by_cond %>% 
+  filter(condition == "Placebo Control") %>% 
+  dplyr::select(n) %>% 
+  deframe()
+
+n2 <- n_by_cond %>% 
+  filter(condition == "Project ABC") %>% 
+  dplyr::select(n) %>% 
+  deframe()
+
+results_bhs_robust <- d.ind.t.t(mi_avg_t_value_bhs_robust, n1, n2, a = 0.05) # t value, n group 1, n group 2, alpha level
+results_bhs_robust
+
+## Now write the function
+
+get_mi_results <- function(.data, measure_var, contrast_var){
+  
+  ## Extracting estimate/standard error
+
+results <- .data %>% 
+  filter(str_detect(measure, measure_var)) %>% 
+  unnest(tidied_contrasts) %>% 
+  ungroup() %>% 
+  dplyr::select(measure, contrast, estimate, std.error) %>% 
+  filter(str_detect(contrast, contrast_var)) 
+
+mi_avg_est <- mi.meld(as.matrix(results$estimate),  as.matrix(results$std.error), byrow = T) #coefficient and standard error
+
+# Calculating the t value by taking the esimate divided by the standard error
+mi_avg_t_value <- mi_avg_est$q.mi[1,1] / mi_avg_est$se.mi[1,1]
+
+# Calculating d effect size with confidence intervals based on the t value using the MOTE package
+## See also https://www.aggieerin.com/shiny-server/tests/indtt.html
+
+# Creating programmatic condition names https://stackoverflow.com/questions/4350440/split-data-frame-string-column-into-multiple-columns
+
+group_names <- str_split_fixed(results$contrast, " - ", n = 2) %>% 
+  as_tibble() %>% 
+  rename(group_1 = V1, group_2 = V2) %>% 
+  slice_head()
+
+n1 <- n_by_cond %>% 
+  filter(condition == group_names$group_1) %>% 
+  dplyr::select(n) %>% 
+  deframe()
+
+n2 <- n_by_cond %>% 
+  filter(condition == group_names$group_2) %>% 
+  dplyr::select(n) %>% 
+  deframe()
+
+results_t_test <- d.ind.t.t(mi_avg_t_value, n1, n2, a = 0.05) # t value, n group 1, n group 2, alpha level
+
+t_test_result_tibble <- list(results_t_test) %>% 
+  flatten() %>% 
+  as_tibble()
+
+measure_contrast_info <- results %>% 
+  slice_head() %>% 
+  dplyr::select(measure, contrast)
+
+final_result <- t_test_result_tibble %>% 
+  bind_cols(measure_contrast_info) %>% 
+  relocate(measure, contrast, everything())
+
+return(final_result)
+
+}
+
+## The function works once!
+
+all_pairwise_contrasts %>% 
+  get_mi_results(measure_var = "bhs", contrast_var = "Placebo Control - Project ABC") %>%
+  print()
+
+```
+
+## All Results for All Models Aggregated Across All Imputations Only For Folks Who Completed the Interventions
+
+The pattern of results stays broadly the same when we only impute data for people who completed the interventions. The only minor differences here are Project ABC has a significant reduction of the CTS compared to the placebo (p = 0.01) and Project Personality has a significant reduction of the GAD-7 compared to Project ABC (p = 0.02).
+
+
+```{r mapping over all measures and potential contrasts while applying rubins rule, include = TRUE}
+
+## Create expanded grid of all combinations of measures and contrasts
+
+contrasts <- c("Placebo Control - Project ABC", "Placebo Control - Project Personality", "Project ABC - Project Personality")
+measures <- test_nest_by_measure_first$measure
+
+all_contrasts_measures <- expand_grid(contrasts, measures) %>% 
+  print()
+
+## Create a dataframe with all results across all measures and contrasts
+
+all_rubins_rule_results <- map2_dfr(all_contrasts_measures$measures, all_contrasts_measures$contrasts, ~{
+  
+  all_pairwise_contrasts %>% 
+  get_mi_results(measure_var = .x, contrast_var = .y)
+  
+}
+  ) %>% 
+  print()
+```
+
+## Doing Imputation That Includes New Reviewer Requested SITBI Outcome
+
+```{r}
+
+cope_imp_sitb <- cope_full_data_randomized %>% 
+  dplyr::select(b_response_id, condition, contains("mean"), b_sitbi_8, f1_sitbi_8) %>% 
+  mutate(condition = factor(case_when(
+    
+    condition == "0" ~ "Placebo Control",
+    condition == "1" ~ "Project Personality",
+    condition == "2" ~ "Project ABC",
+    TRUE ~ NA_character_
+    
+  ))) %>% 
+  as.data.frame()
+
+names_sitb_imp <- cope_imp_sitb %>% 
+  names()
+
+## Getting percent missing across all outcomes in this dataset
+
+percent_missing_all_imputed_variables <- map(names_sitb_imp, ~{
+  
+  cope_imp_sitb %>% 
+    calculate_percent_missing(.data[[.x]])
+  
+}) %>% 
+  print()
+
+```
+
+
+```{r imputing data and visualizing results of imputatio, include = TRUE}
+               
+# Running the multiple imputation model
+# Note, we're matching m to match the % of missing data in our outcome variables rounding up
+set.seed(33)
+cope_out_sitb <- amelia(cope_imp_sitb, m =41, noms = c("condition"), idvars = "b_response_id")
+
+# Creating diagnostic plots
+compare.density(cope_out_sitb, var = "f1_sitbi_8")
+
+overimpute(cope_out_sitb, var = "f1_sitbi_8")
+
+```
+
+```{r creating long format tibble of amelia imputations object to make many models possible}
+
+## Creating long data of Amelia imputations object that we can use to nest each imputation and map functions over each imputation
+
+imp_df <- as.data.frame(cope_out_sitb$imputations)
+
+long_imp_df_vars <- imp_df %>% 
+  pivot_longer(
+    cols = everything(),
+    names_to = c("imp",".value"),
+    names_pattern = "([[:alnum:]]+)\\.([[:alnum:]]+[[:punct:]]+[[:alnum:]]+[[:punct:]]+[[:alnum:]]+)" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+  filter(!is.na(imp)) %>% 
+  print()
+
+## Need to a separate pivot for the condition variable since it's differently structured (Probably not necessary but it's the way I can make it work for now)
+
+long_imp_df_condition <- imp_df %>% 
+  dplyr::select(contains("condition")) %>% 
+  pivot_longer(
+    cols = everything(),
+    names_to = c("imp",".value"),
+    names_pattern = "([[:alnum:]]+)\\.([[:alnum:]])" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+  filter(!is.na(imp)) %>% 
+  rename(condition = c) %>% 
+  print()
+
+long_imp_df <- long_imp_df_vars %>% 
+  bind_cols(long_imp_df_condition %>% dplyr::select(condition)) %>% 
+  print()
+
+## Running the assumption checks on each imputation for one set of variables
+```
+
+```{r mapping this many models pipeline across many variables in toy data}
+
+## This answer looks promising... https://stackoverflow.com/questions/56689304/can-map-take-functions-with-multiple-inputs
+
+## Doing it with toy data first
+
+df <- data.frame(
+  out = sample(c(1:10),40,replace=TRUE),
+  pre = sample(c(1:30),40,replace = TRUE),
+  var1 = sample(c(1:20),40,replace = TRUE),
+  var2 = sample(c(1:50),40,replace = TRUE),
+  group = c(rep(1, 20),rep(2, 20)),
+  name = c(rep(c("bhs", "cdi"), 20))
+)
+
+# Creating nested data frame, nesting by group (think imputation)
+
+df_by_group<-df%>%
+  group_by(group)%>%
+  nest()
+
+# This formula style function lets us pass in the variable names in a way that lets the function work
+
+input_fun<-function(.data, outcome, predictor, covariate){
+  
+  lm_dat <- .data
+  
+  lm(as.formula(paste(outcome,"~",predictor,"+",paste(covariate,collapse = "+"))),data=lm_dat)
+}
+
+input_fun(.data = df, outcome="out",predictor="pre",covariate=c("var1"))
+
+safely_input_fun <- safely(input_fun)
+
+models <- df_by_group %>%
+  mutate(mod = purrr::map(data, ~input_fun(.data = ., outcome="out",predictor="pre",covariate=c("var1"))),
+         tidied = map(mod, tidy),
+         glances = map(mod, broom::glance),
+         homoskedasticity = walk(mod, ~{
+           
+           fitted <- .x$fitted.values
+           residuals <- .x$residuals
+           plot(fitted,residuals)
+           
+         })) %>% 
+  print()
+
+## Getting all models
+
+models %>% 
+  unnest(tidied) %>% 
+  print()
+
+## And there general stats
+
+models %>% 
+  unnest(glances) %>% 
+  print()
+  
+
+```
+
+```{r reformatting our data to match the toy data}
+
+
+## I think we need to make this long data frame even longer. In order to run many models all at once, we need all the condition variables in one column, all the baseline covariate values in one column, and all the outcomes in one column. Since we're doing 5 different models, we'll need a dataframe 5x as long as the current one to contain all of the rows necessary to do that. This dataframe can be created naturally for the baseline covariate and the outcome (since we have to pivot 5 variables longer and so the dataframe will naturally get five times as large). For condition, since we're only pivoting one variable this natural expansion won't happen via the pivot, so we have to duplicate the condition dataframe 4 times and add it to the original, giving us the same sized dataframe as the baseline and outcome.
+
+# Want to put together all outcomes, condition values, and baseline values while also creating a name column based on which model we're looking at 
+
+long_imp_df_baseline <- long_imp_df %>% 
+  dplyr::select(imp, b_response_id, c(b_sitbi_8)) %>% 
+  pivot_longer(
+    cols = where(is.numeric),
+    names_to = "measure",
+    values_to = "baseline" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+  mutate(measure = case_when(
+    
+    str_detect(measure, "sitb") == T ~ "sitb"
+    
+  )) %>%
+  print()
+
+long_imp_df_condition <- long_imp_df %>% 
+  dplyr::select(imp, b_response_id, condition) %>% 
+  pivot_longer(
+    cols = condition,
+    names_to = "measure",
+    values_to = "pred" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+  mutate(measure = "sitb") %>% 
+  print()
+
+# long_imp_df_condition_extra <- long_imp_df_condition
+# 
+# ## Have to resize the condition datafrmae since it only contains one variable, while the other dataframes contain five. Also need to add the correct format of measure vars
+# 
+# long_imp_df_condition_resized <- long_imp_df_condition %>% 
+#   bind_rows(long_imp_df_condition_extra) %>% 
+#   bind_rows(long_imp_df_condition_extra) %>% 
+#   bind_rows(long_imp_df_condition_extra) %>%
+#   bind_rows(long_imp_df_condition_extra) %>%
+#   arrange(imp, b_response_id) %>%
+#   mutate(measure = c(rep(c("bhs","shs","cdi","cts","gad"),58406))) %>% 
+#   print()
+#     
+# class(long_imp_df_condition_resized)
+
+long_imp_df_outcome <- long_imp_df %>% 
+  dplyr::select(imp, b_response_id, c(f1_sitbi_8)) %>% 
+  pivot_longer(
+    cols = where(is.numeric),
+    names_to = "measure",
+    values_to = "out" # Creating new names that will match previous names with regular expressions
+  ) %>% 
+    mutate(measure = case_when(
+    
+    str_detect(measure, "sitb") == T ~ "sitb"
+    
+  )) %>%
+  print()
+
+```
+
+```{r nesting by measure first seems to work}
+
+## Binding these extra long dataframes together
+
+long_imp_df_unnested_initial <- long_imp_df_baseline %>% 
+  left_join(long_imp_df_condition, by = c("imp", "b_response_id", "measure")) %>% 
+  left_join(long_imp_df_outcome, by = c("imp", "b_response_id", "measure"))  %>%
+  relocate(imp, measure, pred, baseline, out)
+
+## Let's do a spot check at random to make sure the correct values of different variables are ending up in the right places (Made sure to select a participant who had missing data at post-intervention and follow-up so the numbers would be different across imputations)
+
+test_sitb_response_long <- long_imp_df %>% 
+  filter(str_detect(imp, "imp10") & str_detect(b_response_id, "R_r3FCy97x6xoH1yF")) %>% 
+  dplyr::select(f1_sitbi_8) %>% 
+  deframe() %>% 
+  print()
+  
+test_sitb_response_longer <- long_imp_df_unnested_initial %>% 
+  filter(str_detect(imp, "imp10") & str_detect(b_response_id, "R_r3FCy97x6xoH1yF") & str_detect(measure, "sitb")) %>% 
+  dplyr::select(out) %>% 
+  deframe() %>% 
+  print()
+
+## And they're the same! This spot check indicates the data has been pivoted in a way that works
+
+test_bhs_response_long == test_bhs_response_longer
+
+## Now removing response id so we can do the many models setup
+
+long_imp_df_unnested <- long_imp_df_unnested_initial %>% 
+  dplyr::select(-b_response_id)
+
+## Nesting by measure
+
+test_nest_by_measure_first <- long_imp_df_unnested %>% 
+  group_by(measure) %>%
+  nest()
+
+## Then splitting by imputation and applying the function
+
+# Do it once
+
+long_imp_df_unnested %>% 
+  dplyr::select(-measure) %>% 
+  group_split(imp) %>% 
+  purrr::map(~input_fun(.data = .x, outcome="out",predictor="pred",covariate=c("baseline")))
+  
+## Now do it by funciton
+
+splitting_by_imp <- test_nest_by_measure_first %>% 
+  mutate(split_by_imp = purrr::map(data,~{
+    
+    new_data <- .x %>% 
+      group_split(imp) %>% 
+      purrr::map(~input_fun(.data = .x, outcome="out",predictor="pred",covariate=c("baseline")))
+      
+  }))
+
+## Unnest so we have access to all the models across all imputations for all outcomes
+
+lms_across_all_outcomes_and_imps <- splitting_by_imp %>% 
+  unnest(split_by_imp) %>% 
+  rename(lm_obj = split_by_imp)
+
+```
+
+```{r now lets look at assumptions by model}
+
+## Do it once
+
+lms_across_all_outcomes_and_imps %>% 
+  filter(str_detect(measure, "sitb")) %>% 
+  mutate(
+         homoskedasticity = map(lm_obj, ~{
+           
+           fitted <- .x$fitted.values
+           residuals <- .x$residuals
+           plot(fitted,residuals)
+           
+         }),
+         normality_qqplot = map(lm_obj, ~{
+           
+           qqnorm(.x$residuals)
+           qqline(.x$residuals)
+           
+         }),
+         normality_hist = map(lm_obj, ~{
+           
+           hist(.x$residuals, xlim=c(-4,4), breaks=10)
+           
+         }),
+         collinearity_vif = map(lm_obj, ~{
+           
+           car::vif(.x)
+           
+         }),
+         outlier_cooksdist <- map(lm_obj, ~{
+           
+           cook <- cooks.distance(.x)
+           plot(cook, ylab="Cook's distances")
+           
+         })
+         ) %>% 
+  print()
+
+## Now write a function
+
+check_lm_assumptions <- function(.data, measure_var){
+  
+  .data %>% 
+  filter(str_detect(measure, measure_var)) %>% 
+  mutate(
+         homoskedasticity = map(lm_obj, ~{
+           
+           fitted <- .x$fitted.values
+           residuals <- .x$residuals
+           plot(fitted,residuals)
+           
+         }),
+         normality_qqplot = map(lm_obj, ~{
+           
+           qqnorm(.x$residuals)
+           qqline(.x$residuals)
+           
+         }),
+         normality_hist = map(lm_obj, ~{
+           
+           hist(.x$residuals, xlim=c(-4,4), breaks=10)
+           
+         }),
+         collinearity_vif = map(lm_obj, ~{
+           
+           car::vif(.x)
+           
+         }),
+         outlier_cooksdist <- map(lm_obj, ~{
+           
+           cook <- cooks.distance(.x)
+           plot(cook, ylab="Cook's distances")
+           
+         })
+         ) %>% 
+  print()
+  
+}
+
+lms_across_all_outcomes_and_imps %>% 
+  check_lm_assumptions(measure_var = "sitb")
+
+```
+
+## Assumptions for Linear Regression are Generally Met Across All Models
+
+```{r mapping over all models to look at assumptions, include = TRUE}
+
+## Now map across all variables
+
+all_assumption_checks <- map(test_nest_by_measure_first$measure, ~{
+  
+  lms_across_all_outcomes_and_imps %>% 
+  check_lm_assumptions(measure_var = .x)
+  
+})
+
+```
+
+```{r creating pairwise contrasts for all models}
+
+## Creating pairwise comparisons for all models https://stackoverflow.com/questions/65347058/emmeans-for-a-gls-model-doesnt-run-inside-map and https://cran.r-project.org/web/packages/emmeans/vignettes/comparisons.html
+
+all_pairwise_contrasts <- lms_across_all_outcomes_and_imps %>% 
+  mutate(contrast_means = map2(data, lm_obj, ~emmeans::emmeans(.y,"pred",data=.x)),
+         pairwise_contrasts = map(contrast_means, contrast, "pairwise", adjust = "none"), # Will be adjusting the p-values later (Want to go across all models)
+         tidied_contrasts = map(pairwise_contrasts, tidy),
+         tidied_lms = map(lm_obj, tidy))
+
+write_rds(all_pairwise_contrasts, "sitb_data_for_table.rds")
+
+```
+
+
+```{r getting results from pairwise contrasts once}
+
+## The function works once!
+
+all_pairwise_contrasts %>% 
+  get_mi_results(measure_var = "sitb", contrast_var = "Placebo Control - Project ABC") %>%
+  print()
+
+```
+
+## All Results for All Models Aggregated Across All Imputations Ofor Reviewer Requested SITB Outcome
+
+```{r mapping over all measures and potential contrasts while applying rubins rule, include = TRUE}
+
+## Create expanded grid of all combinations of measures and contrasts
+
+contrasts <- c("Placebo Control - Project ABC", "Placebo Control - Project Personality", "Project ABC - Project Personality")
+measures <- test_nest_by_measure_first$measure
+
+all_contrasts_measures <- expand_grid(contrasts, measures) %>% 
+  print()
+
+## Create a dataframe with all results across all measures and contrasts
+
+all_rubins_rule_results <- map2_dfr(all_contrasts_measures$measures, all_contrasts_measures$contrasts, ~{
+  
+  all_pairwise_contrasts %>% 
+  get_mi_results(measure_var = .x, contrast_var = .y)
+  
+}
+  ) %>% 
+  print()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
