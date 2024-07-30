@@ -1,9 +1,13 @@
 #poLCA
-install.packages("poLCA")
 library(poLCA)
 library(dplyr)
 library(readr)
 library(stringr)
+library(poLCA)
+library(ggplot2)
+library(reshape2)
+library(RColorBrewer)
+
 
 cope_subset <- read_csv("data/cope_subset.csv")
 dem_gender_subset <- cope_subset %>% dplyr::select(starts_with("b_dem_gender"))
@@ -110,7 +114,7 @@ table1_trans <- tbl_summary(genderid_dat %>% dplyr::select(-b_response_id),
 
 
 
-genderid_dat_cor <- cor(genderid_dat %>% dplyr::select(-b_response_id,-b_dem_sex)) %>% data.frame()
+genderid_dat_cor <- cor(genderid_dat) %>% data.frame()
 
 c(b_dem_sex, b_dem_gender_agender, b_dem_gender_not_sure, b_dem_gender_other_please_specify,
   b_dem_gender_androgynous, b_dem_gender_nonbinary, b_dem_gender_two_spirited,
@@ -123,13 +127,7 @@ c(b_dem_sex, b_dem_gender_agender, b_dem_gender_not_sure, b_dem_gender_other_ple
   b_dem_gender_woman_girl
 )
 
-# 安装并加载必要的包
-install.packages("ggplot2")
-install.packages("reshape2")
-install.packages("RColorBrewer")
-library(ggplot2)
-library(reshape2)
-library(RColorBrewer)
+
 
 
 genderid_dat_cor_melted <- melt(as.matrix(genderid_dat_cor))
@@ -162,10 +160,6 @@ genderid_dat_LCA <- genderid_dat %>%
 
 
 head(genderid_dat)
-
-
-install.packages("poLCA")
-library(poLCA)
 
 
 f1 <- cbind(
@@ -213,11 +207,9 @@ genderid_class <- gender_LCA3$predclass
 
 print(genderid_dat)
 
-############--------------
+
+# probabilities of answering yes by class
 probs_list <- gender_LCA3$probs
-
-#probs_list <- LCA4$probs
-
 
 probs_df <- do.call(rbind, lapply(names(probs_list), function(var) {
   prob_df <- as.data.frame(probs_list[[var]])
@@ -226,11 +218,9 @@ probs_df <- do.call(rbind, lapply(names(probs_list), function(var) {
   prob_df
 })) %>% dplyr::select(-`Pr(1)`)
 
-
-# 初始化一个空列表来存储每个变量的条件概率数据框
 probs_df_list <- list()
 
-# 循环遍历每个变量并提取条件概率
+
 for (var in names(probs_list)) {
   prob_df <- as.data.frame(probs_list[[var]])
   prob_df$variable <- var
@@ -238,7 +228,7 @@ for (var in names(probs_list)) {
   probs_df_list[[var]] <- prob_df
 }
 
-# 将所有变量的条件概率数据框合并为一个
+
 probs_df_combined <- bind_rows(probs_df_list)%>%
   dplyr::select(-`Pr(1)`)
 

@@ -22,7 +22,7 @@ dem_cope_subset <- dem_cope_subset %>%
 tmp <- dem_cope_subset%>%
   mutate(cope_pattern = apply(., 1, function(row) paste0(row, collapse = "")))
 
-## 16 combinations
+
 tmp1 <- tmp$cope_pattern %>% table() %>% data.frame()
 
 recode_variables <- function(df) {
@@ -37,20 +37,15 @@ cope_dat_LCA <- dem_cope_subset %>%
 colnames(cope_dat_LCA) <- c( "connect", "healthworker", "alcohol",
                              "smoking")
 
-f2 <- cbind(
-  # b_dem_sex,
-  connect, healthworker, alcohol,
-  smoking) ~ 1
+f2 <- cbind(connecting_with_others, contacting_a_healthcare_provider,
+        drinking_alcohol, smoking_more_cigarettes_or_vaping_more) ~ 1
 
-set.seed(101)
+set.seed(1017)
 cope_LCA3 <- poLCA(f2, data = cope_dat_LCA,
               nclass = 3)
 
 
 probs_list <- cope_LCA3$probs
-
-#probs_list <- LCA4$probs
-
 
 probs_df <- do.call(rbind, lapply(names(probs_list), function(var) {
   prob_df <- as.data.frame(probs_list[[var]])
@@ -59,10 +54,7 @@ probs_df <- do.call(rbind, lapply(names(probs_list), function(var) {
   prob_df
 })) %>% dplyr::select(-`Pr(1)`)
 
-
-
 probs_df_list <- list()
-
 
 for (var in names(probs_list)) {
   prob_df <- as.data.frame(probs_list[[var]])

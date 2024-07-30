@@ -133,7 +133,7 @@ ggplot(probs_df_combined, aes(x = variable, y =`Pr(2)` , color = class, group = 
   labs(x = "Category", y = "Values", title = "Line Plot of Three Columns")
 
 
-# 将长格式的数据框转换为宽格式
+
 probs_df_wide <- probs_df_combined %>%
   pivot_wider(names_from = class, values_from = c( `Pr(2)`))
 

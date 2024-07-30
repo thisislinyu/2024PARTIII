@@ -23,7 +23,6 @@ race_pattern_dat <- cope_subset %>%
 
 
 cope_subset1 <- cope_subset %>%
-  mutate(b_screener_age = as.numeric(b_screener_age)) %>%
   mutate(race_pattern =race_pattern_dat$race_pattern ) %>%
   mutate(recode_race = case_when(
     race_pattern == "000010" ~ 'White',
@@ -131,8 +130,6 @@ cope_subset2 <- cope_subset1
 
 cope_subset2$genderid3 <- genderid_class
 
-cope_subset2$family3 <- family_class
-
 cope_subset2$cope3 <- cope_class
 
 
@@ -160,7 +157,7 @@ cope_subset3 <- cope_subset2 %>%
            #"b_covid_cope_1_connecting_with_others", "b_covid_cope_1_including_talking_with_people_you_trust_about_your_concerns_and_how_you_are_feeling",
            #"b_covid_cope_1_contacting_a_healthcare_provider", "b_covid_cope_1_drinking_alcohol",
            #"b_covid_cope_1_smoking_more_cigarettes_or_vaping_more",
-           # "recode_language",
+           "recode_language",
            "f1_cdi_mean", "genderid3","family_num","family_cat",
            # "family3",
           "cope3"))
@@ -173,7 +170,7 @@ dat_cc <- cope_subset3 %>%
   filter(b_dem_sex!="Prefer not to say" & b_dem_sex!="Other") %>% ## 1447
   filter(orientation!="I do not want to respond")%>%  ## 1441
   mutate(
-    condition = factor(condition),
+   # condition = factor(condition),
     recode_race = factor(recode_race),
     b_screener_age = factor(b_screener_age),
     b_dem_sex = factor(b_dem_sex),

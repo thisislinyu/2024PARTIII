@@ -1,0 +1,57 @@
+---
+title: "HTE"
+author: "Lin Yu"
+date: "2022/08/02"
+output:
+  rmdformats::readthedown:
+    fig_width: 8
+    fig_height: 5
+    fig_caption: TRUE
+    highlight: "kate"
+    lightbox: FALSE
+    thumbnails: FALSE
+    gallery: FALSE
+    toc_depth: 3
+    embed_fonts: TRUE
+    number_sections: yes
+    use_bookdown: TRUE
+    css: styles.css
+    self_contained: true
+    code_folding: hide
+---
+
+
+> Note: Press the button on the upper right of this file to show all codes
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+library(rmdformats)
+library(DT)
+library(poLCA)
+library(dplyr)
+library(readr)
+library(stringr)
+library(readr)
+library(gtsummary)
+library(flextable)
+library(officer)
+library(ggplot2)
+library(reshape2)
+library(RColorBrewer)
+library(knitr)
+library(viridis)
+library(RColorBrewer)
+library(ggpubr)
+library(naniar)
+
+```
+
+# Data preparation
+
+```{r echo=TRUE, child=c('02.Rmd','03.Rmd')}
+BOSS_MODE <- FALSE
+```

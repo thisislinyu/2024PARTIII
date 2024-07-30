@@ -1,0 +1,64 @@
+# Descriptive table (table 1)
+
+A Descriptive table is generated using the 1441 subjects with complete data. Summary stats is stratified by treatment condition.
+```{r}
+table1_cc <- tbl_summary(dat_cc %>% dplyr::select(-b_response_id,-f1_cdi_mean),
+                      by = condition, statistic = list(all_continuous() ~ "{mean} ({sd})",
+                                                                        all_categorical() ~ "{n} ({p}%)"), digits = all_continuous() ~ 2,
+                      # label = list(
+                      #              b_dem_sex ~ "Biological Sex",
+                      #              b_dem_orientation ~ "Sexual Orientation"
+                      #              #,
+                      #              # b_cdi_sum ~ "Baseline CDI Sum Score (0-24)"
+                      #              )
+                      ) %>%
+  modify_header(label ~ "**Demographics**") %>%
+  modify_spanning_header(c("stat_1", "stat_2","stat_3") ~ "**Treatment Received**")
+table1_cc
+```
+
+The origianl data summary statistics: 
+```{r}
+
+table1 <- tbl_summary(cope_subset1 %>% select(-b_response_id,-f1_cdi_mean),
+                      by = condition, statistic = list(all_continuous() ~ "{mean} ({sd})",
+                                                                        all_categorical() ~ "{n} ({p}%)"), digits = all_continuous() ~ 2,
+                      label = list(
+                        #b_dem_race_american_indian_or_alaska_native ~ "American Indian or Alaska Native",
+                                #   b_dem_race_asian_including_asian_desi ~ "Asian Including Asian Desi",
+                                 #  b_dem_race_hispanic_latinx ~ "Hispanic/Latinx",
+                                 #  b_dem_race_native_hawaiian_or_other_pacific_islander ~ "Native Hawaiian or Other Pacific Islander",
+                                 #  b_dem_race_white_caucasian_non_hispanic_includes_middle_eastern ~ "White",
+                                  # b_dem_race_black_african_american ~"Black/African-American",
+                                 #  b_dem_race_other_specify ~ "Other",
+                                 #  b_dem_race_prefer_not_to_answer ~ "Prefer Not to Answer",
+                                   b_dem_gender_agender ~ "Agender",
+                                   b_dem_gender_not_sure ~ "Not sure/Questioning",
+                                   b_dem_gender_other_please_specify ~ "Unspecified Gender",
+                                   b_dem_gender_androgynous ~ "Androgynous",
+                                   b_dem_gender_nonbinary ~ "Non-binary",
+                                   b_dem_gender_two_spirited ~ "Two-spirited",
+                                   b_dem_gender_female_to_male_transgender_ftm ~ "Transgender - Female to Male",
+                                   b_dem_gender_trans_female_trans_feminine ~ "Trans Female/Trans Feminine",
+                                   b_dem_gender_trans_male_trans_masculine ~ "Trans Male/Trans Masculine",
+                                   b_dem_gender_gender_expansive ~ "Gender Expansive",
+                                   b_dem_gender_third_gender ~ "Third Gender",
+                                   b_dem_gender_genderqueer ~ "Genderqueer",
+                                   b_dem_gender_male_to_female_transgender_mtf ~ "Transgender - Male to Female",
+                                   b_dem_gender_man_boy ~ "Man/Boy",
+                                   b_dem_gender_transgender ~ "Transgender",
+                                   b_dem_gender_woman_girl ~ "Woman/Girl",
+                                   b_dem_sex ~ "Biological Sex",
+                                   b_dem_orientation ~ "Sexual Orientation"
+                                   #,
+                                   # b_cdi_sum ~ "Baseline CDI Sum Score (0-24)"
+                                   )
+                      ) %>%
+  modify_header(label ~ "**Demographics**") %>%
+  modify_spanning_header(c("stat_1", "stat_2","stat_3") ~ "**Treatment Received**")
+
+table1
+```
+
+
+
