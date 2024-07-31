@@ -1,0 +1,53 @@
+# Investigate HTE
+
+## Main effect only model
+
+first, replicate the model in the original paper for comparison. the main effect model which adjusted for baseline CDI score is specified as:$$E(Y|\bf{X}) = \text{baseline CDI}+ \text{condition}$$
+
+```{r}
+abc_main_dat <- dat_abc %>%  dplyr::select(f1_cdi_mean,condition,b_cdi_mean)
+
+abc_main_m <- lm(f1_cdi_mean~ b_cdi_mean + condition,data=abc_main_dat)
+
+person_main_dat <- dat_person %>%  dplyr::select(f1_cdi_mean,condition,b_cdi_mean)
+
+person_main_m <- lm(f1_cdi_mean~ b_cdi_mean + condition,data=person_main_dat)
+```
+
+
+print the model, compare with the published paper (results are similar):
+for project ABC vs control:
+```{r}
+abc_main_m %>% summary()
+```
+
+for project personality vs control:
+```{r}
+person_main_m %>% summary()
+```
+
+## HTE model
+
+The HTE is defined as:
+$$E(Y|\bf{X}) = \text{baseline CDI}+ \text{condition} + \text{lp}+\text{condition}\times \text{lp}$$ where lp is the linear predictor of the baseline model.
+
+```{r}
+lp_abc <- predict(abc_base_m, dat_abc)
+lp_person <- predict(person_base_m, dat_person)
+
+abc_hte_m <- lm(f1_cdi_mean~ b_cdi_mean + condition*lp_abc,data=dat_abc)
+person_hte_m <- lm(f1_cdi_mean~ b_cdi_mean + condition*lp_person,data=dat_person)
+```
+
+### HTE Project ABC 
+The hte model for Project ABC vs control:
+```{r}
+summary(abc_hte_m)
+```
+
+### HTE Project personality 
+The hte model for Project personality vs control:
+```{r}
+summary(person_hte_m)
+```
+

@@ -7,18 +7,6 @@ library(car)
 ## read dataset------
 ## read dataset and data preparation--
 
-
-
-
-dat <- dat_cc %>% filter(condition!="Project Personality") %>%## ABC vs control
-  mutate(condition = as.character(condition),
-         condition = as.factor(condition)
-  )
-dat <- dat_cc %>% filter(condition!="Project ABC") %>%  ## Personality vs control
- mutate(condition = as.character(condition),
-        condition = as.factor(condition)
-        )
-
 rmse <- NULL
 internal_lp <- NULL
 for(i in c(1:nrow(dat))){

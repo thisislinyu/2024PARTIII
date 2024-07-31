@@ -43,7 +43,7 @@ dem_cope_subset <- dem_cope_subset %>%
 Re-code `sexual orientation`, `race`, `family challenge` variables by collapsing some categories with limited number of samples, and generating composite categories.
 
 #### Recode sexual orientation
-```{r}
+```{r sex orient}
 ## recode sexual orientation
 recode_orient_dat <- dem_orient_subset %>%
 mutate(recod_orient= case_when(
@@ -81,6 +81,36 @@ challenge_cat_dat <-  dem_family_subset %>%
 
     TRUE ~ "No"
   ))
+
+
+challenge_cat_dat <- dem_family_subset %>%
+  mutate(
+    Financial = b_covid_family_family_did_not_enough_enough_money_for_food == 1 |
+      b_covid_family_family_did_not_have_enough_money_for_gas_transportation == 1 |
+      b_covid_family_family_did_not_have_a_regular_place_to_sleep_or_stay == 1 |
+      b_covid_family_family_did_not_have_enough_money_to_pay_rent == 1,
+
+    School = b_covid_family_i_could_not_attend_school_in_person == 1 |
+      b_covid_family_i_could_not_attend_school_at_all == 1,
+
+    Other = b_covid_family_other == 1,
+
+    No_impact = b_covid_family_the_covid_19_pandemic_has_not_affected_me_or_my_family_in_these_ways_in_the_past_2_weeks == 1,
+
+    challenge_cat = case_when(
+      Financial & School & Other ~ "Other",
+      Financial & School ~ "Other",
+      Financial & Other ~ "Other",
+      School & Other ~ "Other",
+      Financial ~ "Other",
+      School ~ "School",
+      Other ~ "Other",
+      No_impact ~ "No impact",
+      TRUE ~ "No challenge"
+    )
+  ) %>%
+  dplyr::select(-Financial, -School, -Other, -No_impact)
+
 
 
 ```
@@ -472,7 +502,7 @@ ggsave("figures/LCA_plots.png", width = 10, height = 7, dpi = 600)
 
 ## Missing values
 
-98.6% of the subjects has complete information. 
+98.6% of the subjects have complete information. 
 
 ```{r}
 miss_dat <- cope_subset1 %>%
@@ -494,16 +524,11 @@ vis_miss(miss_dat)
 Tabulate the number and percentage of missing. The missing rate is low, so complete case analysis will be used later.
 
 ```{r miss_plot,fig.height=6, fig.width=6,message=TRUE, warning=FALSE}
+missing_summary <- miss_var_summary(miss_dat)
 
-missing_summary <- miss_dat %>%
-  summarise_all(~ sum(is.na(.))) %>%
-  tidyr::gather(key = "variable", value = "missing_count") %>%
-  mutate(missing_percentage = missing_count / nrow(data) * 100)
-
-
-miss_plot <- ggplot(missing_summary, aes(x = reorder(variable, -missing_count), y = missing_count)) +
+miss_plot <- ggplot(missing_summary, aes(x = reorder(variable, -n_miss), y = n_miss)) +
   geom_bar(stat = "identity", fill = "lightblue",size=0.1) +
-  geom_text(aes(label = paste0(missing_count, " (", round(missing_percentage, 2), "%)")), 
+  geom_text(aes(label = paste0(n_miss, " (", round(pct_miss, 2), "%)")), 
             hjust = 1,  vjust = 0.5, color = "black") +
   coord_flip() +
   theme_minimal() +
@@ -520,7 +545,7 @@ miss_plot
 
 Check if there is any missing pattern among missing variables: No pattern presents!
 ```{r}
-gg_miss_upset(data)
+gg_miss_upset(miss_dat)
 ```
 
 ## The final working dataset
@@ -590,6 +615,7 @@ dat_cc <- cope_subset3 %>%
   filter(!is.na(b_dem_sex)) %>% ## 1447
   filter(!is.na(recode_orient) )## 1441
 
+
 dat_cc %>%  datatable(
   rownames = FALSE,
   options = list(
@@ -598,3 +624,33 @@ dat_cc %>%  datatable(
 save(dat_cc,file="data/dat_cc.rds")
 ```
 
+```{r}
+
+table1_dat <- cope_subset3 %>% 
+
+ mutate(genderid3 = dplyr::recode(genderid3,
+                                "1" = "Non-binary",
+                                "2" = "Women/girls",
+                                "3" = "Male/Masculine")
+   ) %>% 
+     mutate(family_num = dplyr::recode(family_num,
+                                "0" = "0",
+                                "2" = ">=2",
+                                "1" = "1")
+   )  %>% 
+  mutate(cope3 = dplyr::recode(cope3,
+                                "3" = "Positive",
+                                "2" = "No action",
+                                "1" = "Combined")
+   )  %>% 
+   filter(!is.na(recode_race)) %>%  ## 1468
+  filter(!is.na(b_dem_sex)) %>% ## 1447
+  filter(!is.na(recode_orient) )## 1441
+  
+
+colnames(table1_dat) <- c("id", "condition", "Baseline CDI mean score(0-2)", "3-month CDI mean score", 
+"Race", "Age (yrs)", "Biological sex", "Sexual orientation", 
+"Language", "Gender identity", "Number of challenges", "Type of challenges", "Type of coping strategies"
+)
+
+```

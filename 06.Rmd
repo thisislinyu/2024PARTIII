@@ -1,0 +1,326 @@
+# Evaluate HTE
+The HTE is evaluated using calibration plot. 
+
+## Point estiamtes
+First, report the point estiamtes of ATE and cATE.
+
+```{r abc_cali, message=FALSE, warning=FALSE}
+## compute average treatment effect
+#ate_dat <- dat_abc
+
+# ate_dat$condition = 'Placebo Control'
+# 
+# abc_ate_ctrl <- predict(abc_main_m,ate_dat)
+# 
+# ate_dat$condition  = 'Project ABC'
+# 
+# abc_ate_trt <- predict(abc_main_m,ate_dat)
+# 
+# abc_ate_trt-abc_ate_ctrl
+
+abc_ate <- coef(abc_main_m)[3]
+person_ate <- coef(person_main_m)[3]
+
+## cATE/HTE
+## project ABC vs control
+hte_dat <- dat_abc
+
+hte_dat$condition = 'Placebo Control'
+abc_hte_ctrl <- predict(abc_hte_m,hte_dat)
+
+hte_dat$condition  = 'Project ABC'
+abc_hte_trt <- predict(abc_hte_m,hte_dat)
+
+abc_hte <- abc_hte_trt-abc_hte_ctrl
+
+## hte personality vs control
+hte_dat <- dat_person
+
+hte_dat$condition = 'Placebo Control'
+person_hte_ctrl <- predict(person_hte_m,hte_dat)
+
+hte_dat$condition  = 'Project Personality'
+person_hte_trt <- predict(person_hte_m,hte_dat)
+person_hte <- person_hte_trt-person_hte_ctrl
+
+
+point_df <- data.frame(Comparsion= c("Project ABC vs Control","Project personality vs Control" ),
+                       ATE = c(abc_ate,person_ate),
+                       SE = c(summary(abc_main_m)$coefficients[, "Std. Error"][3],
+                              summary(person_main_m)$coefficients[, "Std. Error"][3])
+                       )
+
+kable(point_df, caption = "summary of avearged treatment effect")
+
+## calibration plot
+abc_cal_dat <- data.frame(abc_ate,
+                      abc_hte,
+                      lp_abc)
+
+abc_cal_dat$quantile_grp <- cut(abc_cal_dat$lp_abc,
+                           breaks = quantile(abc_cal_dat$lp_abc, probs = seq(0, 1, by = 0.2)),
+                           include.lowest = TRUE,
+                           labels = FALSE)
+
+## compute the averaged hte effect in each quantile risk grp
+abc_avg_hte <- abc_cal_dat %>%
+  group_by(quantile_grp) %>%
+  summarise(abc_avg_hte = mean(abc_hte, na.rm = TRUE))
+
+
+```
+
+
+```{r person_cali, message=FALSE, warning=FALSE}
+## replciate for project personality vs control
+
+## calibration plot
+person_cal_dat <- data.frame(person_ate,
+                          person_hte,
+                          lp_person)
+
+person_cal_dat$quantile_grp <- cut(person_cal_dat$lp_person,
+                               breaks = quantile(person_cal_dat$lp_person, probs = seq(0, 1, by = 0.2)),
+                               include.lowest = TRUE,
+                               labels = FALSE)
+
+## compute the averaged hte effect in each quantile risk grp
+person_avg_hte <- person_cal_dat %>%
+  group_by(quantile_grp) %>%
+  summarise(person_avg_hte = mean(person_hte, na.rm = TRUE))
+
+## compute bootstrapped CI
+set.seed(1017)
+person_boot_res <- NULL
+for (i in 1:1000){
+  boot.idx <- sample(1:dim(person_cal_dat)[1], size = dim(person_cal_dat)[1], replace = T)
+  boot.data <- person_cal_dat[boot.idx,]
+  boot.data$quantile_grp <- cut(boot.data$lp_person,
+                                  breaks = quantile(boot.data$lp_person, probs = seq(0, 1, by = 0.2)),
+                                  include.lowest = TRUE,
+                                  labels = FALSE)
+  
+  person_avg_hte <- boot.data %>%
+    group_by(quantile_grp) %>%
+    summarise(person_avg_hte = mean(person_hte, na.rm = TRUE))
+  
+  person_boot_res <- rbind(person_boot_res,person_avg_hte)
+}
+
+person_boot_cali_ci <- person_boot_res %>%
+  group_by(quantile_grp) %>%
+  summarise(
+    lower_quantile = round(quantile(person_avg_hte, probs = 0.025), 4),
+    upper_quantile = round(quantile(person_avg_hte, probs = 0.975), 4)
+  )
+
+
+person_cali_result <- left_join(person_avg_hte,person_boot_cali_ci)
+
+
+```
+
+## Bootstrapped CI
+
+compute bootstrapped CI for cATE:
+```{r message=FALSE, warning=FALSE}
+## define bootstrap function
+boot_f <- function(mydat=NULL,seed=1017){
+  set.seed(seed)
+  abc_boot_res <- NULL
+  for (i in 1:1000){
+    boot.idx <- sample(1:dim(mydat)[1], size = dim(mydat)[1], replace = T)
+    boot.data <- mydat[boot.idx,]
+    
+    abc_main_dat <- boot.data %>%  dplyr::select(f1_cdi_mean,condition,b_cdi_mean)
+    
+    abc_main_m <- lm(f1_cdi_mean~ b_cdi_mean + condition,data=abc_main_dat)
+    
+    lp_abc <- predict(abc_main_m,boot.data)
+    
+    abc_ate <- coef(abc_main_m)[3]
+    
+    abc_hte_m <- lm(f1_cdi_mean~ b_cdi_mean + condition*lp_abc,data=boot.data)
+    
+    ## cATE/HTE
+    ## project ABC vs control
+    hte_dat <- boot.data
+    
+    trt_levels <- unique(boot.data$condition) %>% as.character()
+    
+    trt <- trt_levels[!(trt_levels %in% 'Placebo Control')]
+    
+    hte_dat$condition = 'Placebo Control'
+    abc_hte_ctrl <- predict(abc_hte_m,hte_dat)
+    
+    hte_dat$condition  = trt 
+    abc_hte_trt <- predict(abc_hte_m,hte_dat)
+    
+    abc_hte <- abc_hte_trt-abc_hte_ctrl
+    
+    
+    
+    ## calibration plot
+    abc_cal_dat <- data.frame(abc_ate,
+                              abc_hte,
+                              lp_abc)
+    
+    abc_cal_dat$quantile_grp <- cut(abc_cal_dat$lp_abc,
+                                    breaks = quantile(abc_cal_dat$lp_abc, probs = seq(0, 1, by = 0.2)),
+                                    include.lowest = TRUE,
+                                    labels = FALSE)
+    
+    ## compute the averaged hte effect in each quantile risk grp
+    avg_hte <- abc_cal_dat %>%
+      group_by(quantile_grp) %>%
+      summarise(avg_hte = mean(abc_hte, na.rm = TRUE))
+    
+    abc_boot_res <- rbind(abc_boot_res,avg_hte)
+  }
+  return(abc_boot_res)
+}
+```
+
+```{r message=FALSE, warning=FALSE}
+## compute bootstrapped CI
+abc_boot_res <- boot_f(mydat = dat_abc)
+abc_boot_cali_ci <- abc_boot_res %>%
+  group_by(quantile_grp) %>%
+  summarise(
+    lower_quantile = round(quantile(avg_hte, probs = 0.025), 4),
+    upper_quantile = round(quantile(avg_hte, probs = 0.975), 4)
+  )
+abc_cali_result <- left_join(abc_avg_hte,abc_boot_cali_ci)
+
+
+```
+
+for Project personality:
+```{r}
+## for personality
+
+person_boot_res <- boot_f(mydat = dat_person)
+
+person_boot_cali_ci <- person_boot_res %>%
+  group_by(quantile_grp) %>%
+  summarise(
+    lower_quantile = round(quantile(avg_hte, probs = 0.025), 4),
+    upper_quantile = round(quantile(avg_hte, probs = 0.975), 4)
+  )
+
+
+person_cali_result <- left_join(person_avg_hte,person_boot_cali_ci)
+
+## identify the bounds for cali plots
+
+max_cali_y <- max(abc_cali_result$upper_quantile,person_cali_result$upper_quantile) 
+
+min_cali_y <- min(abc_cali_result$lower_quantile,person_cali_result$lower_quantile) 
+
+## check if the ylims are correct 
+### I used -0.2 and 0.5 range for the y axis in the calibration plots
+
+logic1 <- min_cali_y <=  0.05 & min_cali_y >=-0.2
+
+logic2 <- max_cali_y <=  0.05 & max_cali_y >=-0.2
+
+if(!logic1 & ! logic2){
+  print(paste0("please make sure the range of y axis in the following calibration plot is [", min_cali_y, ",",max_cali_y,']'))
+}else{logic_3 = logic1+logic2}
+
+```
+## Calibration plots
+The linear predictor entered model as a continuous variable. For presentation purpose, the linear predictor is discretized into five "risk" groups using quantiles (0.2 incremental). The averaged HTEs/cATEs by "risk" group are calculated and compared with the ATE. 
+
+```{r}
+abc_cali_plot <- ggplot(abc_cali_result, aes(x = as.factor(quantile_grp), y = abc_avg_hte)) +
+  geom_point(size = 2.5) +
+  # geom_line(aes(group = 1), color = "blue") +
+  geom_errorbar(aes(ymin = lower_quantile, ymax = upper_quantile), width = 0.05, color = "black") +
+  labs(x = "",
+       y = "Mean heter_mean_diff"
+       # title = ""
+  ) +
+  geom_hline(yintercept = abc_ate, linetype = "dashed", color = "grey")+
+  theme_minimal()+
+  scale_y_continuous(
+    limits = c(-0.2, 0.05), 
+    breaks = seq(-0.2, 0.05, by = 0.05)
+  )+
+ # ylim(c(min_cali_y,max_cali_y))+
+  ylab("Mean difference")+
+  # ylab(expression(atop("Risk Difference, %", atop("Harm" %<-% phantom("     ") %->% "Benefit")))) +  # Custom y-axis label
+  theme(axis.title.y = element_text(angle = 90, vjust = 0.5, size = 14))
+
+
+
+
+```
+
+For Project ABC vs control:
+```{r, fig.height=6, fig.width=6}
+abc_lp_plot <- ggplot(abc_cal_dat, aes(x = lp_abc)) +
+  geom_histogram(binwidth = 0.01, fill = "black") +
+  labs(x = "Predicted CDI mean score using baseline covariates", y = NULL) +
+  theme_minimal()
+
+abc_combo_plot <- cowplot::plot_grid(
+  abc_cali_plot,
+  abc_lp_plot,
+  ncol = 1,
+  align = "v",
+  rel_heights = c(3, 1)  
+)
+
+# Display the combined plot
+abc_combo_plot
+```
+
+For Project personality vs control: 
+```{r}
+person_cali_plot <- ggplot(person_cali_result, aes(x = as.factor(quantile_grp), y = person_avg_hte)) +
+  geom_point(size = 2.5) +
+  # geom_line(aes(group = 1), color = "blue") +
+  geom_errorbar(aes(ymin = lower_quantile, ymax = upper_quantile), width = 0.05, color = "black") +
+  labs(x = "",
+       y = "Mean heter_mean_diff"
+       # title = ""
+       ) +
+  geom_hline(yintercept = person_ate, linetype = "dashed", color = "grey")+
+  theme_minimal()+
+  scale_y_continuous(
+    limits = c(-0.2, 0.05), 
+    breaks = seq(-0.2, 0.05, by = 0.05)
+  )+
+  ylab("Mean difference")+
+ # ylab(expression(atop("Risk Difference, %", atop("Harm" %<-% phantom("     ") %->% "Benefit")))) +  # Custom y-axis label
+  theme(axis.title.y = element_text(angle = 90, vjust = 0.5, size = 14))
+
+```
+
+
+```{r, fig.height=6, fig.width=6}
+person_lp_plot <- ggplot(person_cal_dat, aes(x = lp_person)) +
+  geom_histogram(binwidth = 0.01, fill = "black") +
+  labs(x = "Predicted CDI mean score using baseline covariates", y = NULL) +
+  theme_minimal()
+
+person_combo_plot <- cowplot::plot_grid(
+  person_cali_plot,
+  person_lp_plot,
+  ncol = 1,
+  align = "v",
+  rel_heights = c(3, 1)  
+)
+
+person_combo_plot
+
+```
+
+combined plots for reporting purpose:
+
+```{r, fig.height=6, fig.width=12}
+cal_plots <- ggarrange(abc_combo_plot, person_combo_plot, ncol = 2, nrow = 1)
+cal_plots
+ggsave("figures/cal_plots.png", width = 10, height = 7, dpi = 600)
+```

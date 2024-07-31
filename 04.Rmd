@@ -1,0 +1,220 @@
+# Baseline CDI Prediction Model
+
+Will use risk-based approach.           
+
+The first step is to construct the baseline CDI prediction model. The focus of the "risk" prediction model is on accurately predicting individuals' "disease" risk. Several considerations need to be taken into account:                    
+
+**Statistical Model Selection:**            
+
+Consideration of models: will use linear model (simple and interpretability)
+
+**Performance Metrics:**
+
+For continuous outcomes, models will be evaluated and selected based on root mean squared error (RMSE), calibration slope, and calibration-at-large.
+
+**Overfitting:**
+
+Employ a leave-one-out cross-validation (LOOCV) framework to address overfitting. LOOCV will be conducted on 80% of the samples (derivation cohort), while the remaining 20% will serve as a test cohort to mimic an external validation. Final model will be constructed on the entire dataset.
+
+```{r}
+## subset data
+dat_abc <- dat_cc %>% dplyr::select(-family_num,-recode_language) %>%  ## removed because of corr.
+  filter(condition!="Project Personality") %>%## ABC vs control
+  mutate(condition = as.character(condition),
+         condition = as.factor(condition)
+  )
+dat_person <- dat_cc %>% dplyr::select(-family_num,-recode_language) %>% 
+  filter(condition!="Project ABC") %>%  ## Personality vs control
+ mutate(condition = as.character(condition),
+        condition = as.factor(condition)
+        )
+```
+a glimpse of the variables:
+```{r}
+str(dat_abc)
+```
+## Build prediction model 
+
+Build prediction models using `caret`
+```{r}
+basemodel_dat <- dat_abc %>% dplyr::select(-condition,-b_cdi_mean,-b_response_id,-b_screener_age,)
+set.seed(1017)
+
+trainIndex <- createDataPartition(basemodel_dat$f1_cdi_mean, p = .8, list = FALSE, times = 1)
+trainData <- basemodel_dat[trainIndex, ]
+testData <- basemodel_dat[-trainIndex, ]
+
+
+
+train_control <- trainControl(method = "LOOCV")
+
+#train_control <- trainControl(method = "cv", number = 3)
+
+# rf_model <- train(f1_cdi_mean ~ ., 
+#                   data = trainData, 
+#                   method = "rf", 
+#                   trControl = train_control)
+
+abc_model <- train(f1_cdi_mean ~ ., 
+                  data = trainData, 
+                  method = "lm", 
+                  trControl = train_control)
+
+
+valid_pred <- predict(abc_model, newdata = trainData)
+
+test_pred <- predict(abc_model, newdata = testData)
+
+## mse
+rmse_f <- function(actual, pred) {
+  sqrt(mean((actual - pred) ^ 2))
+}
+
+
+## perf metrics
+### rmse
+valid_rmse <- rmse_f(trainData$f1_cdi_mean, valid_pred)
+test_rmse <- rmse_f(testData$f1_cdi_mean, test_pred)
+
+### calibration slope & at large
+valid_cali_m <- lm(trainData$f1_cdi_mean~ valid_pred)
+valid_cali_slope <- coef(valid_cali_m)[2]
+valid_cali_at_large <- coef(valid_cali_m)[1]
+
+test_cali_m <- lm(testData$f1_cdi_mean~ test_pred)
+test_cali_slope <- coef(test_cali_m)[2]
+test_cali_at_large <- coef(test_cali_m)[1]
+
+perf_abc <- data.frame(
+  Metric = c("RMSE", "Calibration Slope", "Calibration at Large"),
+  Validation = c(valid_rmse, valid_cali_slope, valid_cali_at_large),
+  Test = c(test_rmse, test_cali_slope, test_cali_at_large)
+)
+
+```
+
+
+```{r}
+basemodel_dat <- dat_person%>% dplyr::select(-condition,-b_cdi_mean,-b_response_id,-b_screener_age,)
+set.seed(1017)
+
+trainIndex <- createDataPartition(basemodel_dat$f1_cdi_mean, p = .8, list = FALSE, times = 1)
+trainData <- basemodel_dat[trainIndex, ]
+testData <- basemodel_dat[-trainIndex, ]
+
+
+
+train_control <- trainControl(method = "LOOCV")
+
+#train_control <- trainControl(method = "cv", number = 3)
+
+# rf_model <- train(f1_cdi_mean ~ ., 
+#                   data = trainData, 
+#                   method = "rf", 
+#                   trControl = train_control)
+
+person_model <- train(f1_cdi_mean ~ ., 
+                  data = trainData, 
+                  method = "lm", 
+                  trControl = train_control)
+
+
+valid_pred <- predict(person_model, newdata = trainData)
+
+test_pred <- predict(person_model, newdata = testData)
+
+## mse
+rmse_f <- function(actual, pred) {
+  sqrt(mean((actual - pred) ^ 2))
+}
+
+
+## perf metrics
+### rmse
+valid_rmse <- rmse_f(trainData$f1_cdi_mean, valid_pred)
+test_rmse <- rmse_f(testData$f1_cdi_mean, test_pred)
+
+### calibration slope & at large
+valid_cali_m <- lm(trainData$f1_cdi_mean~ valid_pred)
+valid_cali_slope <- coef(valid_cali_m)[2]
+valid_cali_at_large <- coef(valid_cali_m)[1]
+
+test_cali_m <- lm(testData$f1_cdi_mean~ test_pred)
+test_cali_slope <- coef(test_cali_m)[2]
+test_cali_at_large <- coef(test_cali_m)[1]
+
+perf_person <- data.frame(
+  Metric = c("RMSE", "Calibration Slope", "Calibration at Large"),
+  Validation = c(valid_rmse, valid_cali_slope, valid_cali_at_large),
+  Test = c(test_rmse, test_cali_slope, test_cali_at_large)
+)
+```
+
+Summary of baseline model output of project ABC model:
+```{r}
+abc_model %>% summary()
+```
+
+Summary of baseline model output of project personality model:
+```{r}
+person_model %>% summary()
+```
+## Evaluate model performance
+Summaries the model performance in the following table:
+```{r}
+rownames(perf_abc) <- c()
+rownames(perf_person) <- c()
+
+kable(perf_abc, caption = "Model performance of baseline risk model (project ABC)")
+
+kable(perf_person, caption = "Model performance of baseline risk model (project personality)")
+
+
+```
+
+## Final baseline prediciton model
+
+The final model is constructed on the entire dataset
+```{r}
+basemodel_dat_abc <- dat_abc %>% dplyr::select(-condition,-b_cdi_mean,-b_response_id,-b_screener_age,)
+
+abc_base_m <- lm(basemodel_dat_abc$f1_cdi_mean~.,data = basemodel_dat_abc)
+
+basemodel_dat_person <- dat_person %>% dplyr::select(-condition,-b_cdi_mean,-b_response_id,-b_screener_age,)
+
+person_base_m <- lm(basemodel_dat_person$f1_cdi_mean~.,data = basemodel_dat_person)
+
+```
+The distribution of predicted CDI mean score can be plotted to check the baseline 'risk'/ heterogeneity of individuals.
+
+### Project ABC baseline model
+
+A summary of the baseline prediction model, for project ABC:
+
+```{r}
+summary(abc_base_m)
+```
+
+### Project personality baseline model
+
+for project personality:
+```{r}
+summary(person_base_m)
+```
+
+## Feature importance
+
+```{r eval=FALSE, include=FALSE}
+bg_X <- model.matrix(f1_cdi_mean ~ ., trainData)[,-1]
+
+# 计算 SHAP 值
+# 使用 kernelshap 计算 SHAP 值
+shap_values <- kernelshap(rf_model, trainData[, -which(names(trainData) == "f1_cdi_mean")],
+                          bg_X = trainData[, -which(names(trainData) == "f1_cdi_mean")],
+                          type = "raw")
+
+shapviz_obj <- shapviz(shap_values$S, X_train)
+
+##beeswarm
+sv_importance(shapviz_obj, "bar", fill = "#8f8f8f", show_other = FALSE)
+```

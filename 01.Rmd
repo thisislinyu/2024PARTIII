@@ -18,6 +18,10 @@ output:
     css: styles.css
     self_contained: true
     code_folding: hide
+  bookdown::gitbook:
+    toc: true
+    toc_depth: 3
+    search: true
 ---
 
 
@@ -47,11 +51,19 @@ library(viridis)
 library(RColorBrewer)
 library(ggpubr)
 library(naniar)
+library(caret)
+library(sjPlot)
+library(car)
+library(randomForest)
+library(iml)
+library(shapviz)
+library(cowplot)
+library(xtable)
 
 ```
 
 # Data preparation
 
-```{r echo=TRUE, child=c('02.Rmd','03.Rmd')}
+```{r echo=TRUE, child=c('02.Rmd','03.Rmd','04.Rmd','05.Rmd','06.Rmd')}
 BOSS_MODE <- FALSE
 ```
