@@ -601,7 +601,7 @@ cope_subset3 <- cope_subset2 %>%
   mutate(
    # condition = factor(condition),
     recode_race = factor(recode_race),
-    b_screener_age = factor(b_screener_age),
+   # b_screener_age = factor(b_screener_age),
     b_dem_sex = factor(b_dem_sex),
     recode_orient = factor(recode_orient),
     genderid3 = factor(genderid3),

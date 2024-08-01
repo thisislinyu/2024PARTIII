@@ -54,12 +54,15 @@ train_control <- trainControl(method = "LOOCV")
 #                   data = trainData, 
 #                   method = "rf", 
 #                   trControl = train_control)
+tune_grid <- expand.grid(alpha = 0,
+                         lambda = 10^seq(-3, 1, length = 10))
 
 abc_model <- train(f1_cdi_mean ~ ., 
                   data = trainData, 
-                  method = "lm", 
-                  trControl = train_control)
-
+                  method = "glmnet", 
+                  trControl = train_control,
+                  tuneGrid = tune_grid,
+                  metric = "RMSE")
 
 valid_pred <- predict(abc_model, newdata = trainData)
 
@@ -112,12 +115,14 @@ train_control <- trainControl(method = "LOOCV")
 #                   data = trainData, 
 #                   method = "rf", 
 #                   trControl = train_control)
-
+tune_grid <- expand.grid(alpha = 0,
+                         lambda = 10^seq(-3, 1, length = 10))
 person_model <- train(f1_cdi_mean ~ ., 
                   data = trainData, 
-                  method = "lm", 
-                  trControl = train_control)
-
+                  method = "glmnet", 
+                  trControl = train_control,
+                  tuneGrid = tune_grid,
+                  metric = "RMSE")
 
 valid_pred <- predict(person_model, newdata = trainData)
 
@@ -180,9 +185,13 @@ basemodel_dat_abc <- dat_abc %>% dplyr::select(-condition,-b_cdi_mean,-b_respons
 
 abc_base_m <- lm(basemodel_dat_abc$f1_cdi_mean~.,data = basemodel_dat_abc)
 
+sjPlot::tab_model(abc_base_m)
+
 basemodel_dat_person <- dat_person %>% dplyr::select(-condition,-b_cdi_mean,-b_response_id,-b_screener_age,)
 
 person_base_m <- lm(basemodel_dat_person$f1_cdi_mean~.,data = basemodel_dat_person)
+
+sjPlot::tab_model(person_base_m)
 
 ```
 The distribution of predicted CDI mean score can be plotted to check the baseline 'risk'/ heterogeneity of individuals.

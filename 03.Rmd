@@ -22,3 +22,17 @@ latex_table1 <- xtable(table1_df)
 
 writeLines(print(latex_table1, type = "latex",include.rownames = FALSE), paste0("table1_df_",Sys.Date(),".tex"))
 ```
+```{r}
+age_summary <- table1_dat %>%
+  mutate(`Age (yrs)` = as.numeric(`Age (yrs)`)) %>% 
+  group_by(condition) %>%
+  summarise(
+    count = n(),
+    mean_age = mean(`Age (yrs)`, na.rm = TRUE),
+    sd_age = sd(`Age (yrs)`, na.rm = TRUE),
+    min_age = min(`Age (yrs)`, na.rm = TRUE),
+    max_age = max(`Age (yrs)`, na.rm = TRUE),
+    median_age = median(`Age (yrs)`),
+    IQR_age = IQR(`Age (yrs)`, na.rm = TRUE)
+  )
+```
