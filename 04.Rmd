@@ -36,7 +36,7 @@ str(dat_abc)
 ## Build prediction model 
 
 Build prediction models using `caret`
-```{r}
+```{r message=FALSE, warning=FALSE}
 basemodel_dat <- dat_abc %>% dplyr::select(-condition,-b_cdi_mean,-b_response_id,-b_screener_age,)
 set.seed(1017)
 
@@ -97,7 +97,7 @@ perf_abc <- data.frame(
 ```
 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 basemodel_dat <- dat_person%>% dplyr::select(-condition,-b_cdi_mean,-b_response_id,-b_screener_age,)
 set.seed(1017)
 
@@ -115,7 +115,7 @@ train_control <- trainControl(method = "LOOCV")
 #                   data = trainData, 
 #                   method = "rf", 
 #                   trControl = train_control)
-tune_grid <- expand.grid(alpha = 0,
+tune_grid <- expand.grid(alpha = 10^seq(0,1, length = 10),
                          lambda = 10^seq(-3, 1, length = 10))
 person_model <- train(f1_cdi_mean ~ ., 
                   data = trainData, 
@@ -183,47 +183,211 @@ The final model is constructed on the entire dataset
 ```{r}
 basemodel_dat_abc <- dat_abc %>% dplyr::select(-condition,-b_cdi_mean,-b_response_id,-b_screener_age,)
 
+best_lambda_abc <- abc_model$bestTune$lambda
+best_alpha <- abc_model$bestTune$alpha ## fixed 0 (ridge)
+
+covariates_abc <- model.matrix(f1_cdi_mean ~ ., data = basemodel_dat_abc)[, -1]  # Create the model matrix
+y_abc <- basemodel_dat_abc$f1_cdi_mean 
+
+abc_base_m <- glmnet::glmnet(covariates_abc, y_abc, alpha = best_alpha, lambda = best_lambda_abc)
+
+coef(abc_base_m)
 abc_base_m <- lm(basemodel_dat_abc$f1_cdi_mean~.,data = basemodel_dat_abc)
 
-sjPlot::tab_model(abc_base_m)
+
+# sjPlot::tab_model(abc_base_m)
 
 basemodel_dat_person <- dat_person %>% dplyr::select(-condition,-b_cdi_mean,-b_response_id,-b_screener_age,)
 
+best_lambda_person <- person_model$bestTune$lambda
+best_alpha <- abc_model$bestTune$alpha ## fixed 0 (ridge)
+
+covariates_person <- model.matrix(f1_cdi_mean ~ ., data = basemodel_dat_person)[, -1]  # Create the model matrix
+y_person <- basemodel_dat_person$f1_cdi_mean 
+
+person_base_m <- glmnet::glmnet(covariates_person, y_person, alpha = best_alpha, lambda = best_lambda_person)
+coef(person_base_m)
+
 person_base_m <- lm(basemodel_dat_person$f1_cdi_mean~.,data = basemodel_dat_person)
 
-sjPlot::tab_model(person_base_m)
+# sjPlot::tab_model(person_base_m)
 
 ```
-The distribution of predicted CDI mean score can be plotted to check the baseline 'risk'/ heterogeneity of individuals.
 
 ### Project ABC baseline model
 
 A summary of the baseline prediction model, for project ABC:
 
 ```{r}
-summary(abc_base_m)
+sjPlot::tab_model(abc_base_m)
 ```
 
 ### Project personality baseline model
 
 for project personality:
 ```{r}
-summary(person_base_m)
+sjPlot::tab_model(person_base_m)
 ```
 
-## Feature importance
+
+## LRT 
+LRT was used to test the sig. of variables in the baseline model
+
+For project ABC:
+```{r}
+## LRT for each variables
+
+### define model formulas
+full_formula <- f1_cdi_mean ~ recode_race + b_dem_sex + recode_orient + genderid3 + family_cat + cope3
+
+gender_formula <- f1_cdi_mean ~ recode_race + b_dem_sex + recode_orient + family_cat + cope3
+
+race_formula <- f1_cdi_mean ~  b_dem_sex + recode_orient + genderid3 + family_cat + cope3
+
+sex_formula <- f1_cdi_mean ~ recode_race + recode_orient + genderid3 + family_cat + cope3
+
+
+orient_formula <- f1_cdi_mean ~ recode_race + b_dem_sex + genderid3 + family_cat + cope3
+
+family_cat_formula <- f1_cdi_mean ~ recode_race + b_dem_sex + recode_orient + genderid3  + cope3
+
+cope_formula <- f1_cdi_mean ~ recode_race + b_dem_sex + recode_orient + genderid3 + family_cat
+
+
+
+full_person <- lm(as.formula(full_formula),data =basemodel_dat_person )
+gender_person <- lm(as.formula(gender_formula),data = basemodel_dat_person)
+lrt_result <- lmtest::lrtest(gender_person,full_person)
+
+deviance <- lrt_result$Chisq[2]
+
+# Extract the degrees of freedom
+df <- lrt_result$Df[2]
+
+# Extract the p-value
+p_value <- lrt_result$`Pr(>Chisq)`[2] %>% round(2)
+
+
+
+
+full_formula <- f1_cdi_mean ~ recode_race + b_dem_sex + recode_orient + genderid3 + family_cat + cope3
+gender_formula <- f1_cdi_mean ~ recode_race + b_dem_sex + recode_orient + family_cat + cope3
+race_formula <- f1_cdi_mean ~ b_dem_sex + recode_orient + genderid3 + family_cat + cope3
+sex_formula <- f1_cdi_mean ~ recode_race + recode_orient + genderid3 + family_cat + cope3
+orient_formula <- f1_cdi_mean ~ recode_race + b_dem_sex + genderid3 + family_cat + cope3
+family_cat_formula <- f1_cdi_mean ~ recode_race + b_dem_sex + recode_orient + genderid3 + cope3
+cope_formula <- f1_cdi_mean ~ recode_race + b_dem_sex + recode_orient + genderid3 + family_cat
+
+
+full_abc <- lm(as.formula(full_formula), data = basemodel_dat_abc)
+full_person <- lm(as.formula(full_formula), data = basemodel_dat_person)
+
+lrt_person_f <- function(full_model, reduced_formula) {
+  reduced_model <- lm(as.formula(reduced_formula), data = basemodel_dat_person)
+  lrt_result <- lrtest(reduced_model,full_model )
+
+  deviance <- lrt_result$Chisq[2]
+  df <- lrt_result$Df[2]
+  p_value <- round(lrt_result$`Pr(>Chisq)`[2], 2)
+
+  return(data.frame(Deviance = deviance, DF = df, P_value = p_value))
+}
+
+lrt_abc_f <- function(full_model, reduced_formula) {
+  reduced_model <- lm(as.formula(reduced_formula), data = basemodel_dat_abc)
+  lrt_result <- lrtest(reduced_model,full_model)
+
+  deviance <- lrt_result$Chisq[2]
+  df <- lrt_result$Df[2]
+  p_value <- round(lrt_result$`Pr(>Chisq)`[2], 2)
+
+  return(data.frame(Deviance = deviance, DF = df, P_value = p_value))
+}
+
+
+reduced_models <- list(
+  `Gender identity` = gender_formula,
+  `Race` = race_formula,
+  `Biological sex` = sex_formula,
+  `Sexual Orientation` = orient_formula,
+  `Challenges` = family_cat_formula,
+  `Coping strategies` = cope_formula
+)
+
+## lrt for project ABC
+dev_results_abc <- lapply(names(reduced_models), function(var) {
+  result <- lrt_abc_f(full_abc, reduced_models[[var]])
+  result$Variable <- var
+  return(result)
+})
+
+
+Dev_df_abc <- bind_rows(dev_results_abc) %>%
+  dplyr::select(Variable,everything())
+
+kable(Dev_df_abc)
+
+## perform lrt (person)
+dev_results_person <- lapply(names(reduced_models), function(var) {
+  result <- lrt_person_f(full_person, reduced_models[[var]])
+  result$Variable <- var
+  return(result)
+})
+
+
+
+
+Dev_df_person <- bind_rows(dev_results_person) %>%
+  dplyr::select(Variable,everything())
+
+
+
+```
+
+For project personality
+```{r}
+kable(Dev_df_person)
+```
+
+
+
 
 ```{r eval=FALSE, include=FALSE}
+# For Project ABC,
 bg_X <- model.matrix(f1_cdi_mean ~ ., trainData)[,-1]
 
-# 计算 SHAP 值
-# 使用 kernelshap 计算 SHAP 值
-shap_values <- kernelshap(rf_model, trainData[, -which(names(trainData) == "f1_cdi_mean")],
-                          bg_X = trainData[, -which(names(trainData) == "f1_cdi_mean")],
-                          type = "raw")
+## calcluate shap value
+shap_values <- kernelshap(abc_base_m, trainData[, -which(names(trainData) == "f1_cdi_mean")],bg_X = trainData[, -which(names(trainData) == "f1_cdi_mean")],
+                          type = "response")
+
+X_train <- trainData %>% select(-f1_cdi_mean)
 
 shapviz_obj <- shapviz(shap_values$S, X_train)
 
 ##beeswarm
-sv_importance(shapviz_obj, "bar", fill = "#8f8f8f", show_other = FALSE)
+# sv_importance(shapviz_obj, "bar", fill = "#8f8f8f", show_other = FALSE)
+sv_importance(shapviz_obj, "beeswarm", fill = "#8f8f8f", show_other = FALSE)+theme_bw()
+
+```
+
+For Project Personality
+```{r shap, eval=FALSE, include=FALSE}
+bg_X <- model.matrix(f1_cdi_mean ~ ., trainData)[,-1]
+
+## calcluate shap value
+shap_values <- kernelshap(person_base_m, trainData[, -which(names(trainData) == "f1_cdi_mean")],bg_X = trainData[, -which(names(trainData) == "f1_cdi_mean")],
+                          type = "response")
+
+shapviz_obj <- shapviz(shap_values$S, X_train)
+
+##beeswarm
+# sv_importance(shapviz_obj, "bar", fill = "#8f8f8f", show_other = FALSE)
+sv_importance(shapviz_obj, "beeswarm", fill = "#8f8f8f", show_other = FALSE)+theme_bw()
+
+# #More influential parameters are more widely distributed on the x-axis. SHAP
+# values greater than 0 indicate greater absolute risk reduction; values less than 0 indicate
+# greater absolute risk increase. The colour coding of the variable (high – low), as shown in the
+# legend, indicates the relationship between values of the parameter with respect to its range of
+# values (“high” means a high value on its scale; “low” means a low value on its scale) and its
+# influence on predicted treatment effect. (from Kent)
 ```

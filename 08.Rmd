@@ -1,0 +1,51 @@
+## Distribution in high risk groups
+
+```{r}
+
+
+risk_abc_dat <- cbind(table1_dat %>% filter(condition %in% c("Project ABC", "Placebo Control")),abc_cal_dat_copy %>% 
+dplyr::select(-condition))
+
+risk_table1_abc <-tbl_summary(risk_abc_dat %>% dplyr::select(-id,-`3-month CDI mean score`),
+                      by = quantile_grp, statistic = list(all_continuous() ~ "{mean} ({sd})",
+                                                                        all_categorical() ~ "{n} ({p}%)"), digits = all_continuous() ~ 2,
+                      # label = list(
+                      #              b_dem_sex ~ "Biological Sex",
+                      #              b_dem_orientation ~ "Sexual Orientation"
+                      #              #,
+                      #              # b_cdi_sum ~ "Baseline CDI Sum Score (0-24)"
+                      #              )
+                      ) %>%
+  modify_header(label ~ "**Demographics**") 
+
+risk_table1_abc_df <- as.data.frame(risk_table1_abc)
+latex_table1_abc <- xtable(risk_table1_abc_df)
+
+writeLines(print(latex_table1_abc, type = "latex",include.rownames = FALSE), paste0("table1_df_abc_",Sys.Date(),".tex"))
+
+
+
+```
+
+
+```{r}
+
+risk_person_dat <- cbind(table1_dat %>% filter(condition %in% c("Project Personality", "Placebo Control")),person_cal_dat_copy %>% dplyr::select(-condition))
+
+risk_table1_person <- tbl_summary(risk_person_dat %>% dplyr::select(-id,-`3-month CDI mean score`),
+                      by = quantile_grp, statistic = list(all_continuous() ~ "{mean} ({sd})",
+                                                                        all_categorical() ~ "{n} ({p}%)"), digits = all_continuous() ~ 2,
+                      # label = list(
+                      #              b_dem_sex ~ "Biological Sex",
+                      #              b_dem_orientation ~ "Sexual Orientation"
+                      #              #,
+                      #              # b_cdi_sum ~ "Baseline CDI Sum Score (0-24)"
+                      #              )
+                      ) %>%
+  modify_header(label ~ "**Demographics**")
+
+risk_table1_person_df <- as.data.frame(risk_table1_person)
+latex_table1_person <- xtable(risk_table1_person_df)
+
+writeLines(print(latex_table1_person, type = "latex",include.rownames = FALSE), paste0("table1_df_person_",Sys.Date(),".tex"))
+```

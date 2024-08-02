@@ -89,35 +89,41 @@ person_avg_hte <- person_cal_dat %>%
   group_by(quantile_grp) %>%
   summarise(person_avg_hte = mean(person_hte, na.rm = TRUE))
 
+### this is not correct, should boot from the very beginning
 ## compute bootstrapped CI
-set.seed(1017)
-person_boot_res <- NULL
-for (i in 1:1000){
-  boot.idx <- sample(1:dim(person_cal_dat)[1], size = dim(person_cal_dat)[1], replace = T)
-  boot.data <- person_cal_dat[boot.idx,]
-  boot.data$quantile_grp <- cut(boot.data$lp_person,
-                                  breaks = quantile(boot.data$lp_person, probs = seq(0, 1, by = 0.2)),
-                                  include.lowest = TRUE,
-                                  labels = FALSE)
-  
-  person_avg_hte <- boot.data %>%
-    group_by(quantile_grp) %>%
-    summarise(person_avg_hte = mean(person_hte, na.rm = TRUE))
-  
-  person_boot_res <- rbind(person_boot_res,person_avg_hte)
-}
+# set.seed(1017)
+# person_boot_res <- NULL
+# for (i in 1:1000){
+#   boot.idx <- sample(1:dim(person_cal_dat)[1], size = dim(person_cal_dat)[1], replace = T)
+#   boot.data <- person_cal_dat[boot.idx,]
+#   boot.data$quantile_grp <- cut(boot.data$lp_person,
+#                                   breaks = quantile(boot.data$lp_person, probs = seq(0, 1, by = 0.2)),
+#                                   include.lowest = TRUE,
+#                                   labels = FALSE)
+#   
+#   person_avg_hte <- boot.data %>%
+#     group_by(quantile_grp) %>%
+#     summarise(person_avg_hte = mean(person_hte, na.rm = TRUE))
+#   
+#   person_boot_res <- rbind(person_boot_res,person_avg_hte)
+# }
+# 
+# person_boot_cali_ci <- person_boot_res %>%
+#   group_by(quantile_grp) %>%
+#   summarise(
+#     lower_quantile = round(quantile(person_avg_hte, probs = 0.025), 4),
+#     upper_quantile = round(quantile(person_avg_hte, probs = 0.975), 4)
+#   )
+# 
+# 
+# person_cali_result <- left_join(person_avg_hte,person_boot_cali_ci)
 
-person_boot_cali_ci <- person_boot_res %>%
-  group_by(quantile_grp) %>%
-  summarise(
-    lower_quantile = round(quantile(person_avg_hte, probs = 0.025), 4),
-    upper_quantile = round(quantile(person_avg_hte, probs = 0.975), 4)
-  )
+```
 
-
-person_cali_result <- left_join(person_avg_hte,person_boot_cali_ci)
-
-
+A brief summary of the linear predictors:
+```{r}
+abc_cal_dat$lp_person %>% summary()
+person_cal_dat$lp_person %>% summary()
 ```
 
 ## Bootstrapped CI
@@ -260,7 +266,7 @@ abc_cali_plot <- ggplot(abc_cali_result, aes(x = as.factor(quantile_grp), y = ab
 For Project ABC vs control:
 ```{r, fig.height=6, fig.width=6}
 abc_lp_plot <- ggplot(abc_cal_dat, aes(x = lp_abc)) +
-  geom_histogram(binwidth = 0.01, fill = "black") +
+  geom_histogram(binwidth = 0.02, fill = "black") +
   labs(x = "Predicted CDI mean score using baseline covariates", y = NULL) +
   theme_minimal()
 
@@ -272,10 +278,14 @@ abc_combo_plot <- cowplot::plot_grid(
   rel_heights = c(3, 1)  
 )
 
+
+
 # Display the combined plot
 abc_combo_plot
 ```
-
+```{r}
+abc_cal_dat$lp_abc %>% summary()
+```
 For Project personality vs control: 
 ```{r}
 person_cali_plot <- ggplot(person_cali_result, aes(x = as.factor(quantile_grp), y = person_avg_hte)) +
@@ -314,6 +324,7 @@ person_combo_plot <- cowplot::plot_grid(
 )
 
 person_combo_plot
+person_cal_dat$lp_person %>% summary()
 
 ```
 
@@ -323,4 +334,51 @@ combined plots for reporting purpose:
 cal_plots <- ggarrange(abc_combo_plot, person_combo_plot, ncol = 2, nrow = 1)
 cal_plots
 ggsave("figures/cal_plots.png", width = 10, height = 7, dpi = 600)
+```
+```{r}
+## combined plot for report
+
+
+abc_lp_plot <- ggplot(abc_cal_dat, aes(x = lp_abc)) +
+  geom_histogram(binwidth = 0.03, fill = "#1f78b4",alpha=0.8) +
+  labs(x = "Predicted CDI-SF mean score (Project ABC)", y = NULL) +
+  theme_minimal()
+
+person_lp_plot <- ggplot(person_cal_dat, aes(x = lp_person)) +
+  geom_histogram(binwidth = 0.03, fill = "#8B0000",alpha=0.8) +
+  labs(x = "Predicted CDI-SF mean score (Project Personality)", y = NULL) +
+  theme_minimal()
+
+
+cal_plots_report <- ggarrange(abc_lp_plot, person_lp_plot, ncol = 2, nrow = 1)
+cal_plots_report
+ggsave("figures/cal_plots_report.png", width = 10, height = 7, dpi = 600)
+
+
+abc_cal_dat_report <- abc_cal_dat
+
+person_cal_dat_report <- person_cal_dat
+
+
+abc_cal_dat_report$grp ="Project ABC"
+
+person_cal_dat_report$grp = "Project Personality"
+
+colnames(person_cal_dat_report) = colnames(abc_cal_dat_report)
+
+combined_cal_dat_report<- rbind(abc_cal_dat_report,person_cal_dat_report)
+
+
+combined_hist_plot <-ggplot(combined_cal_dat_report, aes(x = lp_abc, fill = grp)) +
+  geom_histogram(binwidth = 0.02, alpha = 0.8, position = "identity") +
+  labs(x = "Predicted 3-month CDI-SF mean score using baseline prediction models", y = "Frequency", fill = "Project") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Project ABC" = "#1f78b4", "Project Personality" = "#8B0000"))
+
+combined_hist_plot
+
+ggsave("figures/combined_hist_plot.png", width = 10, height = 7, dpi = 600)
+
+
+
 ```

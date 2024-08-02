@@ -1,47 +1,456 @@
-# Appendix
+# Sensitivity Analysis
 
-The original data summary statistics: 
+##  inverse probability of missingness weighting (IPMW) 
+Check the missingness, and regress the missing status on variables with complete info.
+
 ```{r}
 
-table1 <- tbl_summary(cope_subset1 %>% select(-b_response_id,-f1_cdi_mean),
-                      by = condition, statistic = list(all_continuous() ~ "{mean} ({sd})",
-                                                                        all_categorical() ~ "{n} ({p}%)"), digits = all_continuous() ~ 2,
-                      label = list(
-                        #b_dem_race_american_indian_or_alaska_native ~ "American Indian or Alaska Native",
-                                #   b_dem_race_asian_including_asian_desi ~ "Asian Including Asian Desi",
-                                 #  b_dem_race_hispanic_latinx ~ "Hispanic/Latinx",
-                                 #  b_dem_race_native_hawaiian_or_other_pacific_islander ~ "Native Hawaiian or Other Pacific Islander",
-                                 #  b_dem_race_white_caucasian_non_hispanic_includes_middle_eastern ~ "White",
-                                  # b_dem_race_black_african_american ~"Black/African-American",
-                                 #  b_dem_race_other_specify ~ "Other",
-                                 #  b_dem_race_prefer_not_to_answer ~ "Prefer Not to Answer",
-                                   b_dem_gender_agender ~ "Agender",
-                                   b_dem_gender_not_sure ~ "Not sure/Questioning",
-                                   b_dem_gender_other_please_specify ~ "Unspecified Gender",
-                                   b_dem_gender_androgynous ~ "Androgynous",
-                                   b_dem_gender_nonbinary ~ "Non-binary",
-                                   b_dem_gender_two_spirited ~ "Two-spirited",
-                                   b_dem_gender_female_to_male_transgender_ftm ~ "Transgender - Female to Male",
-                                   b_dem_gender_trans_female_trans_feminine ~ "Trans Female/Trans Feminine",
-                                   b_dem_gender_trans_male_trans_masculine ~ "Trans Male/Trans Masculine",
-                                   b_dem_gender_gender_expansive ~ "Gender Expansive",
-                                   b_dem_gender_third_gender ~ "Third Gender",
-                                   b_dem_gender_genderqueer ~ "Genderqueer",
-                                   b_dem_gender_male_to_female_transgender_mtf ~ "Transgender - Male to Female",
-                                   b_dem_gender_man_boy ~ "Man/Boy",
-                                   b_dem_gender_transgender ~ "Transgender",
-                                   b_dem_gender_woman_girl ~ "Woman/Girl",
-                                   b_dem_sex ~ "Biological Sex",
-                                   b_dem_orientation ~ "Sexual Orientation"
-                                   #,
-                                   # b_cdi_sum ~ "Baseline CDI Sum Score (0-24)"
-                                   )
-                      ) %>%
-  modify_header(label ~ "**Demographics**") %>%
-  modify_spanning_header(c("stat_1", "stat_2","stat_3") ~ "**Treatment Received**")
+model_dat <- cope_subset3 %>% 
+  dplyr::select(-family_num,-b_response_id,-recode_language,-b_screener_age)
+## check missingness
+model_dat$missing[complete.cases(model_dat)] <- 0
+model_dat$missing[!complete.cases(model_dat)] <- 1
 
-table1
+model_dat$missing %>% table()
+str(model_dat)
+
+missed <- glm(missing ~ genderid3+b_cdi_mean+family_cat+cope3,
+              data = model_dat, family = "binomial")
+
+model_dat$fitted = missed$fitted.values
+model_dat$IPCW = (1-mean(model_dat$missing))/(1-model_dat$fitted)
+model_dat <- subset(model_dat, complete.cases(model_dat))
+
+```
+A summary of the IPCW model:
+```{r}
+summary(missed)
+
+
+```
+Summary of IPCW weights:
+```{r}
+
+summary(model_dat$IPCW)
+
+```
+
+## Baseline prediction models
+```{r message=FALSE, warning=FALSE}
+
+ipcw_abc_dat <- model_dat %>% filter(condition!="Project Personality") %>%## ABC vs control
+  mutate(condition = as.character(condition),
+         condition = as.factor(condition)
+  )%>% dplyr::select(-condition,-b_cdi_mean,-fitted,-IPCW)
+
+
+ipcw_person_dat <- model_dat %>% 
+filter(condition!="Project ABC") %>%  ## Personality vs control
+ mutate(condition = as.character(condition),
+        condition = as.factor(condition)
+        )%>% dplyr::select(-condition,-b_cdi_mean,-fitted,-IPCW)
+
+
+abc_weight <- ipcw_abc_dat$IPCW
+person_weight <- ipcw_person_dat$IPCW
+
+abc_ipcw_base_m <- glm(f1_cdi_mean ~., 
+             family =gaussian(link="identity"),
+             weights =abc_weight,
+             data = ipcw_abc_dat)
+
+
+person_ipcw_base_m <- glm(f1_cdi_mean ~., 
+             family =gaussian(link="identity"),
+             weights =person_weight,
+             data = ipcw_person_dat)
+## baseline linear pred values
+
+abc_ipcw_lp <- predict(abc_ipcw_base_m, newdata = ipcw_abc_dat)
+
+person_ipcw_lp <- predict(person_ipcw_base_m, newdata = ipcw_person_dat)
+lp_abc <- abc_ipcw_lp
+lp_person <- person_ipcw_lp
+
+
+
+```
+baseline model for Project ABC:
+```{r}
+tab_model(abc_ipcw_base_m)
+```
+baseline model for Project personality:
+```{r}
+tab_model(person_ipcw_base_m)
+```
+
+## Main effect model
+
+```{r}
+
+ipcw_abc_dat <- model_dat %>% filter(condition!="Project Personality") %>%## ABC vs control
+  mutate(condition = as.character(condition),
+         condition = as.factor(condition)
+  )%>% dplyr::select(-fitted,-IPCW)
+
+
+ipcw_person_dat <- model_dat %>% 
+filter(condition!="Project ABC") %>%  ## Personality vs control
+ mutate(condition = as.character(condition),
+        condition = as.factor(condition)
+        )%>% dplyr::select(-fitted,-IPCW)
+
+
+
+abc_ipcw_main_m <- glm(f1_cdi_mean ~ b_cdi_mean + condition, 
+             family =gaussian(link="identity"),
+             weights =abc_weight,
+             data = ipcw_abc_dat)
+
+
+
+person_ipcw_main_m <- glm(f1_cdi_mean ~b_cdi_mean + condition , 
+             family =gaussian(link="identity"),
+             weights =person_weight,
+             data = ipcw_person_dat)
+
+
+
+```
+Main effect model for Project ABC:
+```{r}
+tab_model(abc_ipcw_main_m)
+
+
+```
+Main effect model for Project Personality:
+```{r}
+tab_model(person_ipcw_main_m)
+```
+
+## The HTE models
+
+```{r}
+
+
+abc_ipcw_hte_m <- glm(f1_cdi_mean ~b_cdi_mean + condition * abc_ipcw_lp, 
+             family =gaussian(link="identity"),
+             weights =abc_weight,
+             data = ipcw_abc_dat)
+
+
+
+person_ipcw_hte_m <- glm(f1_cdi_mean ~b_cdi_mean + condition * person_ipcw_lp, 
+             family =gaussian(link="identity"),
+             weights =person_weight,
+             data = ipcw_person_dat)
+
+
+
+
+
+```
+
+HTE model for Project ABC:
+```{r}
+tab_model(abc_ipcw_hte_m)
+
+```
+HTE model for Project Personality:
+```{r}
+tab_model(person_ipcw_hte_m)
 ```
 
 
+```{r}
+## rename variabels 
+
+abc_main_m <- abc_ipcw_main_m
+
+person_main_m <- person_ipcw_main_m
+
+abc_hte_m <- abc_ipcw_hte_m
+  
+person_hte_m <- person_ipcw_hte_m
+  
+  
+
+## cATE/HTE
+## project ABC vs control
+hte_dat <- ipcw_abc_dat
+
+hte_dat$condition = 'Placebo Control'
+abc_hte_ctrl <- predict(abc_hte_m,hte_dat)
+
+hte_dat$condition  = 'Project ABC'
+abc_hte_trt <- predict(abc_hte_m,hte_dat)
+
+abc_hte <- abc_hte_trt-abc_hte_ctrl
+
+## hte personality vs control
+hte_dat <- ipcw_person_dat
+
+hte_dat$condition = 'Placebo Control'
+person_hte_ctrl <- predict(person_hte_m,hte_dat)
+
+hte_dat$condition  = 'Project Personality'
+person_hte_trt <- predict(person_hte_m,hte_dat)
+person_hte <- person_hte_trt-person_hte_ctrl
+
+
+point_df <- data.frame(Comparsion= c("Project ABC vs Control","Project personality vs Control" ),
+                       ATE = c(abc_ate,person_ate),
+                       SE = c(summary(abc_main_m)$coefficients[, "Std. Error"][3],
+                              summary(person_main_m)$coefficients[, "Std. Error"][3])
+                       )
+
+kable(point_df, caption = "summary of avearged treatment effect")
+
+```
+
+## Risk stratification
+
+```{r}
+## calibration plot
+
+abc_ate <- coef(abc_main_m)[3]
+person_ate <- coef(person_main_m)[3]
+
+
+person_cal_dat <- data.frame(person_ate,
+                          person_hte,
+                          lp_person)
+
+person_cal_dat$quantile_grp <- cut(person_cal_dat$lp_person,
+                               breaks = quantile(person_cal_dat$lp_person, probs = seq(0, 1, by = 0.2)),
+                               include.lowest = TRUE,
+                               labels = FALSE)
+
+## compute the averaged hte effect in each quantile risk grp
+person_avg_hte <- person_cal_dat %>%
+  group_by(quantile_grp) %>%
+  summarise(person_avg_hte = mean(person_hte, na.rm = TRUE))
+
+```
+
+## Boot CI
+
+```{r message=FALSE, warning=FALSE}
+## for ipcw data
+## ipcw_person_dat
+boot2_f <- function(mydat=NULL,seed=1017){
+  set.seed(seed)
+  abc_boot_res <- NULL
+  for (i in 1:1000){
+    boot.idx <- sample(1:dim(mydat)[1], size = dim(mydat)[1], replace = T)
+    boot.data <- mydat[boot.idx,]
+    
+    abc_main_dat <- boot.data %>%  dplyr::select(f1_cdi_mean,condition,b_cdi_mean)
+    
+    abc_main_m <- lm(f1_cdi_mean~ b_cdi_mean + condition,data=abc_main_dat)
+    
+    lp_abc <- predict(abc_main_m,boot.data)
+    
+    abc_ate <- coef(abc_main_m)[3]
+    
+    abc_hte_m <- glm(f1_cdi_mean ~b_cdi_mean + condition*lp_abc, 
+             family =gaussian(link="identity"),
+             weights =boot.data$IPCW,
+             data = boot.data)
+    
+    ## cATE/HTE
+    ## project ABC vs control
+    hte_dat <- boot.data
+    
+    trt_levels <- unique(boot.data$condition) %>% as.character()
+    
+    trt <- trt_levels[!(trt_levels %in% 'Placebo Control')]
+    
+    hte_dat$condition = 'Placebo Control'
+    abc_hte_ctrl <- predict(abc_hte_m,hte_dat)
+    
+    hte_dat$condition  = trt 
+    abc_hte_trt <- predict(abc_hte_m,hte_dat)
+    
+    abc_hte <- abc_hte_trt-abc_hte_ctrl
+    
+    
+    
+    ## calibration plot
+    abc_cal_dat <- data.frame(abc_ate,
+                              abc_hte,
+                              lp_abc)
+    
+    abc_cal_dat$quantile_grp <- cut(abc_cal_dat$lp_abc,
+                                    breaks = quantile(abc_cal_dat$lp_abc, probs = seq(0, 1, by = 0.2)),
+                                    include.lowest = TRUE,
+                                    labels = FALSE)
+    
+    ## compute the averaged hte effect in each quantile risk grp
+    avg_hte <- abc_cal_dat %>%
+      group_by(quantile_grp) %>%
+      summarise(avg_hte = mean(abc_hte, na.rm = TRUE))
+    
+    abc_boot_res <- rbind(abc_boot_res,avg_hte)
+  }
+  return(abc_boot_res)
+}
+```
+
+For Project ABC:
+```{r message=FALSE, warning=FALSE}
+## compute bootstrapped CI
+abc_boot_res <- boot2_f(mydat = ipcw_abc_dat)
+abc_boot_cali_ci <- abc_boot_res %>%
+  group_by(quantile_grp) %>%
+  summarise(
+    lower_quantile = round(quantile(avg_hte, probs = 0.025), 4),
+    upper_quantile = round(quantile(avg_hte, probs = 0.975), 4)
+  )
+abc_cali_result <- left_join(abc_avg_hte,abc_boot_cali_ci)
+```
+
+
+For Project personality:
+```{r}
+person_boot_res <- boot2_f(mydat = dat_person)
+
+person_boot_cali_ci <- person_boot_res %>%
+  group_by(quantile_grp) %>%
+  summarise(
+    lower_quantile = round(quantile(avg_hte, probs = 0.025), 4),
+    upper_quantile = round(quantile(avg_hte, probs = 0.975), 4)
+  )
+
+
+person_cali_result <- left_join(person_avg_hte,person_boot_cali_ci)
+
+## identify the bounds for cali plots
+
+max_cali_y <- max(abc_cali_result$upper_quantile,person_cali_result$upper_quantile) 
+
+min_cali_y <- min(abc_cali_result$lower_quantile,person_cali_result$lower_quantile) 
+
+## check if the ylims are correct 
+### I used -0.2 and 0.5 range for the y axis in the calibration plots
+
+logic1 <- min_cali_y <=  0.05 & min_cali_y >=-0.2
+
+logic2 <- max_cali_y <=  0.05 & max_cali_y >=-0.2
+
+if(!logic1 & ! logic2){
+  print(paste0("please make sure the range of y axis in the following calibration plot is [", min_cali_y, ",",max_cali_y,']'))
+}else{logic_3 = logic1+logic2}
+```
+## Risk stratification 
+```{r}
+abc_cali_plot <- ggplot(abc_cali_result, aes(x = as.factor(quantile_grp), y = abc_avg_hte)) +
+  geom_point(size = 2.5,color = "#8B0000") +
+  # geom_line(aes(group = 1), color = "blue") +
+  geom_errorbar(aes(ymin = lower_quantile, ymax = upper_quantile), width = 0.05, color = "#8B0000") +
+  labs(x = "",
+       y = "Mean heter_mean_diff"
+       # title = ""
+  ) +
+  geom_hline(yintercept = abc_ate, linetype = "dashed", color = "grey")+
+  theme_minimal()+
+  scale_y_continuous(
+    limits = c(-0.2, 0.05), 
+    breaks = seq(-0.2, 0.05, by = 0.05)
+  )+
+ # ylim(c(min_cali_y,max_cali_y))+
+  ylab("Mean difference")+
+  # ylab(expression(atop("Risk Difference, %", atop("Harm" %<-% phantom("     ") %->% "Benefit")))) +  # Custom y-axis label
+  theme(axis.title.y = element_text(angle = 90, vjust = 0.5, size = 14))
+```
+
+```{r}
+abc_lp_plot <- ggplot(abc_cal_dat, aes(x = lp_abc)) +
+  geom_histogram(binwidth = 0.02, fill = "#8B0000") +
+  labs(x = "Predicted CDI mean score using baseline covariates (Project ABC)", y = NULL) +
+  theme_minimal()
+
+abc_combo_plot <- cowplot::plot_grid(
+  abc_cali_plot,
+  abc_lp_plot,
+  ncol = 1,
+  align = "v",
+  rel_heights = c(3, 1)  
+)
+
+
+
+# Display the combined plot
+abc_combo_plot
+abc_cal_dat$lp_abc %>% summary()
+```
+```{r}
+person_cali_plot <- ggplot(person_cali_result, aes(x = as.factor(quantile_grp), y = person_avg_hte)) +
+  geom_point(size = 2.5, color = "#8B0000") +
+  # geom_line(aes(group = 1), color = "blue") +
+  geom_errorbar(aes(ymin = lower_quantile, ymax = upper_quantile), width = 0.05, color = "#8B0000") +
+  labs(x = "",
+       y = "Mean heter_mean_diff"
+       # title = ""
+       ) +
+  geom_hline(yintercept = person_ate, linetype = "dashed", color = "grey")+
+  theme_minimal()+
+  scale_y_continuous(
+    limits = c(-0.2, 0.05), 
+    breaks = seq(-0.2, 0.05, by = 0.05)
+  )+
+  ylab("Mean difference")+
+ # ylab(expression(atop("Risk Difference, %", atop("Harm" %<-% phantom("     ") %->% "Benefit")))) +  # Custom y-axis label
+  theme(axis.title.y = element_text(angle = 90, vjust = 0.5, size = 14))
+```
+
+```{r}
+person_lp_plot <- ggplot(person_cal_dat, aes(x = lp_person)) +
+  geom_histogram(binwidth = 0.01, fill = "#8B0000") +
+  labs(x = "Predicted CDI mean score using baseline covariates(Project Personality)", y = NULL) +
+  theme_minimal()
+
+person_combo_plot <- cowplot::plot_grid(
+  person_cali_plot,
+  person_lp_plot,
+  ncol = 1,
+  align = "v",
+  rel_heights = c(3, 1)  
+)
+
+person_combo_plot
+```
+
+```{r}
+cal_plots <- ggarrange(abc_combo_plot, person_combo_plot, ncol = 2, nrow = 1)
+cal_plots
+
+ggsave("figures/cal_plots_ipcw.png", width = 10, height = 7, dpi = 600)
+```
+
+Distribution of baseline depression severity score
+```{r}
+abc_cal_dat_report <- abc_cal_dat
+
+person_cal_dat_report <- person_cal_dat
+
+
+abc_cal_dat_report$grp ="Project ABC"
+
+person_cal_dat_report$grp = "Project Personality"
+
+colnames(person_cal_dat_report) = colnames(abc_cal_dat_report)
+
+combined_cal_dat_report<- rbind(abc_cal_dat_report,person_cal_dat_report)
+
+
+combined_hist_plot <-ggplot(combined_cal_dat_report, aes(x = lp_abc, fill = grp)) +
+  geom_histogram(binwidth = 0.03, alpha = 0.8, position = "identity") +
+  labs(x = "Predicted 3-month CDI-SF mean score using baseline prediction models", y = "Frequency", fill = "Project") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Project ABC" = "#1f78b4", "Project Personality" = "#8B0000"))
+
+combined_hist_plot
+ggsave("figures/combined_hist_plot_ipcw.png", width = 10, height = 7, dpi = 600)
+```
 

@@ -1,7 +1,7 @@
 ---
 title: "Identifying heterogeneous treatment effects for online single-session interventions for adolescent depression: a secondary analysis"
-author: "Lin Yu"
-date: "2022/08/02"
+author: ""
+date: "2024/08/02"
 output:
   rmdformats::readthedown:
     fig_width: 8
@@ -25,9 +25,13 @@ output:
 ---
 
 
-> Note: Press the button on the upper right of this file to show all codes
+> Note: Press the button on the upper right of this file to show all codes.
+
+Report: `r xfun::embed_file('PART_III.pdf')`. Git repo can be found [here](https://github.com/thisislinyu/2024PARTIII)
+
 
 ```{r setup, include=FALSE}
+
 knitr::opts_chunk$set(
 	echo = FALSE,
 	message = FALSE,
@@ -59,11 +63,14 @@ library(iml)
 library(shapviz)
 library(cowplot)
 library(xtable)
+library(gridExtra)
+library(lmtest)
+library(kernelshap)
 
 ```
 
 # Data preparation
 
-```{r echo=TRUE, child=c('02.Rmd','03.Rmd','04.Rmd','05.Rmd','06.Rmd')}
+```{r echo=TRUE, child=c('02.Rmd','03.Rmd','04.Rmd','05.Rmd','06.Rmd','07.Rmd','08.Rmd','09.Rmd')}
 BOSS_MODE <- FALSE
 ```

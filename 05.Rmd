@@ -19,11 +19,13 @@ print the model, compare with the published paper (results are similar):
 for project ABC vs control:
 ```{r}
 abc_main_m %>% summary()
+tab_model(abc_main_m)
 ```
 
 for project personality vs control:
 ```{r}
 person_main_m %>% summary()
+tab_model(person_main_m)
 ```
 
 ## HTE model
@@ -43,11 +45,13 @@ person_hte_m <- lm(f1_cdi_mean~ b_cdi_mean + condition*lp_person,data=dat_person
 The hte model for Project ABC vs control:
 ```{r}
 summary(abc_hte_m)
+tab_model(abc_hte_m)
 ```
 
 ### HTE Project personality 
 The hte model for Project personality vs control:
 ```{r}
 summary(person_hte_m)
+tab_model(person_hte_m)
 ```
 

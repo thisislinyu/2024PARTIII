@@ -1,0 +1,418 @@
+## Rearrange for report (For Porject ABC vs control)
+
+
+boot1_f <- function(mydat=NULL,seed=1017){
+  set.seed(seed)
+  abc_boot_res <- NULL
+  for (i in 1:1000){
+    boot.idx <- sample(1:dim(mydat)[1], size = dim(mydat)[1], replace = T)
+    boot.data <- mydat[boot.idx,]
+
+    abc_main_dat <- boot.data %>%  dplyr::select(f1_cdi_mean,condition,b_cdi_mean)
+
+    abc_main_m <- lm(f1_cdi_mean~ b_cdi_mean + condition,data=abc_main_dat)
+
+    lp_abc <- predict(abc_main_m,boot.data)
+
+    abc_ate <- coef(abc_main_m)[3]
+
+    abc_hte_m <- lm(f1_cdi_mean~ b_cdi_mean + condition*lp_abc,data=boot.data)
+
+    ## cATE/HTE
+    ## project ABC vs control
+    hte_dat <- boot.data
+
+    trt_levels <- unique(boot.data$condition) %>% as.character()
+
+    trt <- trt_levels[!(trt_levels %in% 'Placebo Control')]
+
+    hte_dat$condition = 'Placebo Control'
+    abc_hte_ctrl <- predict(abc_hte_m,hte_dat)
+
+    hte_dat$condition  = trt
+    abc_hte_trt <- predict(abc_hte_m,hte_dat)
+
+    abc_hte <- abc_hte_trt-abc_hte_ctrl
+
+
+
+    ## calibration plot
+    abc_cal_dat <- data.frame(abc_ate,
+                              abc_hte,
+                              lp_abc)
+
+    abc_cal_dat$quantile_grp <- cut(abc_cal_dat$lp_abc,
+                                    breaks = quantile(abc_cal_dat$lp_abc, probs = seq(0, 1, by = 0.1)),
+                                    include.lowest = TRUE,
+                                    labels = FALSE)
+
+    ## compute the averaged hte effect in each quantile risk grp
+    avg_hte <- abc_cal_dat %>%
+      group_by(quantile_grp) %>%
+      summarise(avg_hte = mean(abc_hte, na.rm = TRUE))
+
+    abc_boot_res <- rbind(abc_boot_res,avg_hte)
+  }
+  return(abc_boot_res)
+}
+
+
+
+## calibration plot
+abc_cal_dat_copy <- data.frame(abc_ate,
+                               abc_hte,
+                               lp_abc)
+
+
+abc_cal_dat_copy$quantile_grp <- cut(abc_cal_dat_copy$lp_abc,
+                                     breaks = quantile(abc_cal_dat_copy$lp_abc, probs = seq(0, 1, by = 0.1)),
+                                     include.lowest = TRUE,
+                                     labels = FALSE)
+
+abc_cal_dat_copy$condition <- dat_abc$condition
+
+cali_10group <- table(abc_cal_dat_copy$condition,abc_cal_dat_copy$quantile_grp) %>%  as.data.frame()
+
+wide_10group <- tidyr::pivot_wider(cali_10group, names_from = Var1, values_from = Freq)
+
+## risk quantiles
+quantiles <- quantile(abc_cal_dat_copy$lp_abc, probs = seq(0, 1, by = 0.1)) %>% round(2)
+
+base_score_int <- paste(head(quantiles, -1), tail(quantiles, -1), sep = " - ")
+
+wide_10group$base_score <- base_score_int
+
+
+wide_10group <-  wide_10group %>%
+  dplyr::select(Var2, base_score,everything())
+
+
+
+
+## compute the averaged hte effect in each quantile risk grp
+abc_avg_hte_copy <- abc_cal_dat_copy %>%
+  group_by(quantile_grp) %>%
+  summarise(abc_avg_hte = mean(abc_hte, na.rm = TRUE))
+
+
+###boot CI
+
+abc_boot_res_copy <- boot1_f(mydat = dat_abc)
+abc_boot_cali_ci_copy <- abc_boot_res_copy %>%
+  group_by(quantile_grp) %>%
+  summarise(
+    lower_quantile = round(quantile(avg_hte, probs = 0.025), 4),
+    upper_quantile = round(quantile(avg_hte, probs = 0.975), 4)
+  )
+abc_cali_result_copy <- left_join(abc_avg_hte_copy,abc_boot_cali_ci_copy)
+
+
+abc_cali_result_copy <- apply(abc_cali_result_copy, 2, function(x) round(x, 2)) %>% data.frame()
+
+abc_cali_result_copy$mean_diff <- paste0( abc_cali_result_copy$abc_avg_hte,"(",abc_cali_result_copy$lower_quantile,",",abc_cali_result_copy$upper_quantile,")")
+
+
+
+
+
+
+### calibration plot data prep
+cali10_plot_dat <- cbind(wide_10group,abc_cali_result_copy)
+
+cali10_plot <-  ggplot(cali10_plot_dat, aes(x = as.factor(quantile_grp), y = abc_avg_hte)) +
+  geom_point(size = 5) +
+  # geom_line(aes(group = 1), color = "blue") +
+  geom_errorbar(aes(ymin = lower_quantile, ymax = upper_quantile), width = 0.15, color = "black") +
+  labs(x = "",
+       y = "Mean heter_mean_diff"
+       # title = ""
+  ) +
+  geom_hline(yintercept = abc_ate, linetype = "dashed", color = "grey")+
+  theme_minimal()+
+  scale_y_continuous(
+    limits = c(-0.2, 0.1),
+    breaks = seq(-0.2, 0.05, by = 0.05)
+  )+
+  ylab("Mean difference")+
+  coord_flip()+
+  # ylab(expression(atop("Risk Difference, %", atop("Harm" %<-% phantom("     ") %->% "Benefit")))) +  # Custom y-axis label
+  theme(axis.title.y = element_text(angle = 90, vjust = 0.5, size = 14))
+
+
+
+
+
+## for reporting purpose
+wide_10group$`Mean difference` <- abc_cali_result_copy$mean_diff
+
+colnames(wide_10group) <- c("Score group", "Score interval", "Placebo Control", "Project ABC", "Mean difference"
+)
+
+wide_10group_plot <- wide_10group
+
+wide_10group_plot$`Score group` <- as.character(wide_10group_plot$`Score group`)
+wide_10group_plot$`Score group`[wide_10group_plot$`Score group` == "1"] <- "1 (Lowest)"
+wide_10group_plot$`Score group`[wide_10group_plot$`Score group` == "10"] <- "10 (Highest)"
+
+
+
+
+
+cali10_plot_dat$quantile_grp = factor(cali10_plot_dat$quantile_grp,levels =c("1","2","3","4","5","6","7","8","9","10") )
+extended_levels <-c(rev(levels(cali10_plot_dat$quantile_grp)),11)
+new_labels <- c(as.character(c(10:1)),"")
+
+cali10_plot <- ggplot(cali10_plot_dat, aes(x = as.factor(quantile_grp), y = abc_avg_hte)) +
+  geom_point(size = 2.5,shape=15,color = "#1f78b4") +
+  geom_errorbar(aes(ymin = lower_quantile, ymax = upper_quantile), width = 0.15,color = "#1f78b4") +
+  labs(x = "", y = "Mean difference of 3-month CDI-SF mean score(Project ABC vs Placebo Control)") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  geom_hline(yintercept = abc_ate, linetype = "dashed",color = "#1f78b4") +
+  theme_minimal() +
+  scale_y_continuous(limits = c(-0.2, 0.1), breaks = seq(-0.2, 0.1, by = 0.05)) +
+  coord_flip() +
+  #scale_x_discrete(limits = rev(levels(cali10_plot_dat$quantile_grp)))+
+  scale_x_discrete(limits = extended_levels,labels = new_labels) +
+  theme(axis.title.y = element_text(angle = 90, vjust = 0.5, size = 12))+
+  theme(axis.text.x = element_text(size = 12))
+cali10_plot
+
+#### table plot
+wide10plot <- wide_10group_plot %>% mutate(`Placebo Control` = as.character(`Placebo Control`),
+                                           `Project ABC` = as.character(`Project ABC`),
+                                           `Num.~Control/ABC^1`= paste0(`Placebo Control`,"/",`Project ABC`)
+                                           #`Score~interval^1` = `Score interval`
+
+)
+
+wide10plot <- rbind(colnames(wide10plot),wide10plot)
+
+wide10plot1 <- wide10plot
+wide10plot1$`Score group` <- factor(wide10plot$`Score group`,
+                                    levels = c("Score group", "1 (Lowest)", "2", "3", "4", "5", "6", "7",
+                                               "8", "9", "10 (Highest)"))
+
+wide10plot1$`Mean difference`[wide10plot1$`Mean difference`=="-0.07(-0.12,0)"] = "-0.07(-0.12,0.00)"
+wide10plot1$`Mean difference`[wide10plot1$`Mean difference`=="-0.1(-0.16,-0.04)"] = "-0.10(-0.16,-0.04)"
+wide10plot1$`Mean difference`[wide10plot1$`Mean difference`=="-0.11(-0.2,-0.04)"] = "-0.11(-0.20,-0.04)"
+
+# wide10plot1$`Score group`[wide10plot1$`Score group`=="Score group"] = "Score~group^1"
+# wide10plot1$`Score interval`[wide10plot1$`Score interval`=="Score interval"] = "Score~interval^2"
+# wide10plot1$`Mean difference`[wide10plot1$`Mean difference`=="Mean difference"] = "Mean~difference^4"
+
+
+
+wide10plot1$myscale <- c(1.2,2.1,3.1,4.1,5,6,7,8,9,10,11)
+wide10plot1$myscale <- c(1.1, c(2:11)+0.05)
+
+
+
+table_text <- ggplot(wide10plot1, aes(x = 1, y = myscale)) +
+  geom_text(aes(label = `Score group`), size = 5, hjust = 0,nudge_x = 0) +
+  geom_text(aes(label =`Score interval` ), size = 5,  hjust = 0.5, vjust = 0.5, nudge_x = 1.2) +
+  #geom_text(aes(label = `Placebo Control`), size = 5, hjust = 0, nudge_x = 1.8) +
+  #geom_text(aes(label = `Project ABC`), size = 5, hjust = 0, nudge_x = 3) +
+  geom_text(aes(label = `Num.~Control/ABC^1`), size = 5, hjust = 0.5, vjust = 0.5, nudge_x = 2.4,parse = TRUE)+
+  geom_text(aes(label = `Mean difference`), size = 5,  hjust = 0.5, vjust = 0.5, nudge_x = 3.75) +
+  theme_void() +
+  xlim(1, 5) +
+  ylim(12, 1)
+
+
+risk_strata_plot <- plot_grid(table_text, cali10_plot, ncol = 2, rel_widths = c(2, 3))
+
+
+risk_strata_plot
+
+ggsave("figures/abc_risk_strata.png", risk_strata_plot, width = 12, height = 6, dpi = 600)
+
+
+
+## Rearrange for report (For Porject personality vs control)
+
+
+## calibration plot
+person_cal_dat_copy <- data.frame(person_ate,
+                                  person_hte,
+                                  lp_person)
+
+
+person_cal_dat_copy$quantile_grp <- cut(person_cal_dat_copy$lp_person,
+                                        breaks = quantile(person_cal_dat_copy$lp_person, probs = seq(0, 1, by = 0.1)),
+                                        include.lowest = TRUE,
+                                        labels = FALSE)
+
+person_cal_dat_copy$condition <- dat_person$condition
+
+cali_10group <- table(person_cal_dat_copy$condition,person_cal_dat_copy$quantile_grp) %>%  as.data.frame()
+
+wide_10group <- tidyr::pivot_wider(cali_10group, names_from = Var1, values_from = Freq)
+
+## risk quantiles
+quantiles <- quantile(person_cal_dat_copy$lp_person, probs = seq(0, 1, by = 0.1)) %>% round(2)
+
+base_score_int <- paste(head(quantiles, -1), tail(quantiles, -1), sep = " - ")
+
+wide_10group$base_score <- base_score_int
+
+
+wide_10group <-  wide_10group %>%
+  dplyr::select(Var2, base_score,everything())
+
+
+
+
+## compute the averaged hte effect in each quantile risk grp
+person_avg_hte_copy <- person_cal_dat_copy %>%
+  group_by(quantile_grp) %>%
+  summarise(person_avg_hte = mean(person_hte, na.rm = TRUE))
+
+
+###boot CI
+
+person_boot_res_copy <- boot1_f(mydat = dat_person)
+person_boot_cali_ci_copy <- person_boot_res_copy %>%
+  group_by(quantile_grp) %>%
+  summarise(
+    lower_quantile = round(quantile(avg_hte, probs = 0.025), 4),
+    upper_quantile = round(quantile(avg_hte, probs = 0.975), 4)
+  )
+person_cali_result_copy <- left_join(person_avg_hte_copy,person_boot_cali_ci_copy)
+
+
+person_cali_result_copy <- apply(person_cali_result_copy, 2, function(x) round(x, 2)) %>% data.frame()
+
+person_cali_result_copy$mean_diff <- paste0( person_cali_result_copy$person_avg_hte,"(",person_cali_result_copy$lower_quantile,",",person_cali_result_copy$upper_quantile,")")
+
+
+
+
+
+
+### calibration plot data prep
+cali10_plot_dat <- cbind(wide_10group,person_cali_result_copy)
+
+cali10_plot <-  ggplot(cali10_plot_dat, aes(x = as.factor(quantile_grp), y = person_avg_hte)) +
+  geom_point(size = 5) +
+  # geom_line(aes(group = 1), color = "blue") +
+  geom_errorbar(aes(ymin = lower_quantile, ymax = upper_quantile),  width = 0.3,linewidth = 1, color = "black") +
+  labs(x = "",
+       y = "Mean heter_mean_diff"
+       # title = ""
+  ) +
+  geom_hline(yintercept = person_ate, linetype = "dashed", color = "grey")+
+  theme_minimal()+
+  scale_y_continuous(
+    limits = c(-0.2, 0.1),
+    breaks = seq(-0.2, 0.05, by = 0.05)
+  )+
+  ylab("Mean difference")+
+  coord_flip()+
+  # ylab(expression(atop("Risk Difference, %", atop("Harm" %<-% phantom("     ") %->% "Benefit")))) +  # Custom y-axis label
+  theme(axis.title.y = element_text(angle = 90, vjust = 0.5, size = 14))
+
+
+
+
+
+## for reporting purpose
+wide_10group$`Mean difference` <- person_cali_result_copy$mean_diff
+
+colnames(wide_10group) <- c("Score group", "Score interval", "Placebo Control", "Project Personality", "Mean difference"
+)
+
+wide_10group_plot <- wide_10group
+
+wide_10group_plot$`Score group` <- as.character(wide_10group_plot$`Score group`)
+wide_10group_plot$`Score group`[wide_10group_plot$`Score group` == "1"] <- "1 (Lowest)"
+wide_10group_plot$`Score group`[wide_10group_plot$`Score group` == "10"] <- "10 (Highest)"
+
+
+
+
+cali10_plot_dat$quantile_grp = factor(cali10_plot_dat$quantile_grp,levels =c("1","2","3","4","5","6","7","8","9","10") )
+extended_levels <-c(rev(levels(cali10_plot_dat$quantile_grp)),11)
+new_labels <- c(as.character(c(10:1)),"")
+
+cali10_plot <- ggplot(cali10_plot_dat, aes(x = as.factor(quantile_grp), y = person_avg_hte)) +
+  geom_point(size =5,shape=15,color = "#8B0000") +
+  geom_errorbar(aes(ymin = lower_quantile, ymax = upper_quantile), width = 0.3,linewidth = 1,color = "#8B0000") +
+  labs(x = "", y = "Mean difference of 3-month CDI-SF mean score(Project Personality vs Placebo Control)") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  geom_hline(yintercept = person_ate, linetype = "dashed",color = "#8B0000") +
+  theme_minimal() +
+  scale_y_continuous(limits = c(-0.2, 0.1), breaks = seq(-0.2, 0.1, by = 0.05)) +
+  coord_flip() +
+  #scale_x_discrete(limits = rev(levels(cali10_plot_dat$quantile_grp)))+
+  scale_x_discrete(limits = extended_levels,labels = new_labels) +  # 反转x轴顺序
+  theme(axis.title.y = element_text(angle = 90, vjust = 0.5, size = 12))+
+  theme(axis.text.x = element_text(size = 12))
+cali10_plot
+
+
+
+#### table plot
+wide10plot <- wide_10group_plot %>% mutate(`Placebo Control` = as.character(`Placebo Control`),
+                                           `Project Personality` = as.character(`Project Personality`),
+                                           `Num.~Control/Personality^2`= paste0(`Placebo Control`,"/",`Project Personality`)
+                                           #`Score~interval^1` = `Score interval`
+
+)
+
+wide10plot <- rbind(colnames(wide10plot),wide10plot)
+
+wide10plot1 <- wide10plot
+wide10plot1$`Score group` <- factor(wide10plot$`Score group`,
+                                    levels = c("Score group", "1 (Lowest)", "2", "3", "4", "5", "6", "7",
+                                               "8", "9", "10 (Highest)"))
+
+wide10plot1$`Mean difference`[wide10plot1$`Mean difference`=="-0.07(-0.12,0)"] = "-0.07(-0.12,0.00)"
+wide10plot1$`Mean difference`[wide10plot1$`Mean difference`=="-0.1(-0.16,-0.04)"] = "-0.10(-0.16,-0.04)"
+wide10plot1$`Mean difference`[wide10plot1$`Mean difference`=="-0.11(-0.2,-0.04)"] = "-0.11(-0.20,-0.04)"
+
+# wide10plot1$`Score group`[wide10plot1$`Score group`=="Score group"] = "Score~group^1"
+# wide10plot1$`Score interval`[wide10plot1$`Score interval`=="Score interval"] = "Score~interval^2"
+# wide10plot1$`Mean difference`[wide10plot1$`Mean difference`=="Mean difference"] = "Mean~difference^4"
+
+
+
+wide10plot1$myscale <- c(1.2,2.1,3.1,4.1,5,6,7,8,9,10,11)
+wide10plot1$myscale <- c(1.1, c(2:11)+0.05)
+
+
+
+table_text <- ggplot(wide10plot1, aes(x = 1, y = myscale)) +
+  geom_text(aes(label = `Score group`), size = 5, hjust = 0,nudge_x = 0) +
+  geom_text(aes(label =`Score interval` ), size = 5,  hjust = 0.5, vjust = 0.5, nudge_x = 1.2) +
+  #geom_text(aes(label = `Placebo Control`), size = 5, hjust = 0, nudge_x = 1.8) +
+  #geom_text(aes(label = `Project Personality`), size = 5, hjust = 0, nudge_x = 3) +
+  geom_text(aes(label = `Num.~Control/Personality^2`), size = 5, hjust = 0.5, vjust = 0.5, nudge_x = 2.4,parse = TRUE)+
+  geom_text(aes(label = `Mean difference`), size = 5,  hjust = 0.5, vjust = 0.5, nudge_x = 3.75) +
+  theme_void() +
+  xlim(1, 5) +
+  ylim(12, 1)
+
+
+risk_strata_plot_person <-plot_grid(table_text, cali10_plot, ncol = 2, rel_widths = c(2, 3))
+
+
+ggsave("figures/person_risk_strata.png", risk_strata_plot_person, width = 12, height = 6, dpi = 600)
+
+
+risk_plots_combined <-  ggarrange(risk_strata_plot, risk_strata_plot_person, ncol = 1, nrow = 2)
+table_text
+
+risk_plots_combined
+ggsave("figures/risk_plots_combined.png", width = 12, height = 6, dpi = 600)
+
+combined_plot <- arrangeGrob(risk_strata_plot, risk_strata_plot_person, ncol = 1, nrow = 2)
+
+# Save the combined plot to a file with specified dimensions
+ggsave("figures/combined_plot.png", combined_plot, width = 18.2, height = 12)
+
+
+
+
+
+
+
