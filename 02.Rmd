@@ -524,7 +524,9 @@ vis_miss(miss_dat)
 Tabulate the number and percentage of missing. The missing rate is low, so complete case analysis will be used later.
 
 ```{r miss_plot,fig.height=6, fig.width=6,message=TRUE, warning=FALSE}
-missing_summary <- miss_var_summary(miss_dat)
+missing_summary <- miss_var_summary(miss_dat) %>% 
+  mutate(n_miss = as.numeric(n_miss),
+         pct_miss = as.numeric(pct_miss))
 
 miss_plot <- ggplot(missing_summary, aes(x = reorder(variable, -n_miss), y = n_miss)) +
   geom_bar(stat = "identity", fill = "lightblue",size=0.1) +

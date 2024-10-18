@@ -15,7 +15,6 @@ output:
     embed_fonts: TRUE
     number_sections: yes
     use_bookdown: TRUE
-    css: styles.css
     self_contained: true
     code_folding: hide
   bookdown::gitbook:
@@ -37,6 +36,19 @@ knitr::opts_chunk$set(
 	message = FALSE,
 	warning = FALSE
 )
+```
+
+```{r echo=FALSE}
+
+package_files <- list.files('mypackages', full.names = TRUE)
+
+install.packages(package_files, repos = NULL, type = "source")
+
+```
+
+```{r}
+sessioninfo::package_info()
+
 library(rmdformats)
 library(DT)
 library(poLCA)
@@ -66,7 +78,6 @@ library(xtable)
 library(gridExtra)
 library(lmtest)
 library(kernelshap)
-
 ```
 
 # Data preparation
@@ -597,7 +608,10 @@ vis_miss(miss_dat)
 Tabulate the number and percentage of missing. The missing rate is low, so complete case analysis will be used later.
 
 ```{r miss_plot,fig.height=6, fig.width=6,message=TRUE, warning=FALSE}
-missing_summary <- miss_var_summary(miss_dat)
+missing_summary <- miss_var_summary(miss_dat) %>% 
+  mutate(n_miss = as.numeric(n_miss),
+         pct_miss = as.numeric(pct_miss)
+         )
 
 miss_plot <- ggplot(missing_summary, aes(x = reorder(variable, -n_miss), y = n_miss)) +
   geom_bar(stat = "identity", fill = "lightblue",size=0.1) +
